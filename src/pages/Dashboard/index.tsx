@@ -43,7 +43,7 @@ interface Category {
 
 const Dashboard: React.FC = () => {
   const { searchWord } = useSearch();
-  const { addToCart, cart } = useCart();
+  const { addToCart } = useCart();
   const { addToast } = useToast();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -167,9 +167,8 @@ const Dashboard: React.FC = () => {
           return changeQuantity;
         }),
       );
-      console.log(cart);
     },
-    [products, addToast, cart],
+    [products, addToast],
   );
 
   const handleRemoveProductClick = useCallback(
@@ -193,11 +192,9 @@ const Dashboard: React.FC = () => {
 
   const handleAddToCartClick = useCallback(
     (product: Product) => {
-      console.log('ADD To CART');
-      console.log(cart);
       addToCart(product);
     },
-    [addToCart, cart],
+    [addToCart],
   );
 
   return (
@@ -267,12 +264,18 @@ const Dashboard: React.FC = () => {
                       <FiPlusCircle />
                     </SetQuantityButton>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => handleAddToCartClick(product)}
-                  >
-                    ADICIONAR AO CARRINHO
-                  </button>
+                  {product.stock === 0 ? (
+                    <button type="button" disabled>
+                      ESGOTADO
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => handleAddToCartClick(product)}
+                    >
+                      ADICIONAR AO CARRINHO
+                    </button>
+                  )}
                 </HandleCardAmount>
               </ProductCard>
             ))}

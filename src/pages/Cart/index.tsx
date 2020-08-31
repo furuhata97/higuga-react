@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import {
   FiArrowLeft,
   FiTrash,
@@ -13,15 +13,12 @@ import { useAuth } from '../../hooks/auth';
 import { useCart } from '../../hooks/cart';
 
 import FooterNav from '../../components/footer';
-
-import logo from '../../assets/higugaLogo.svg';
+import Header from '../../components/GenericHeader';
 
 import { formatter } from '../../utils/moneyFormatter';
 
 import {
   Container,
-  Header,
-  BackButton,
   Content,
   CartItems,
   ItemsHeader,
@@ -46,10 +43,6 @@ const Cart: React.FC = () => {
     paymentMethod,
   } = useCart();
   const history = useHistory();
-
-  const handleBackClick = useCallback(() => {
-    history.push('/');
-  }, [history]);
 
   const handleRemoveClick = useCallback(
     (id: string, quantity: number) => {
@@ -115,13 +108,7 @@ const Cart: React.FC = () => {
   return (
     <>
       <Container>
-        <Header>
-          <BackButton type="button" onClick={handleBackClick}>
-            <FiArrowLeft size={24} />
-            Voltar para a loja
-          </BackButton>
-          <img src={logo} alt="Logo do Higuga" />
-        </Header>
+        <Header back="/" text="Voltar para a loja" />
         <Content>
           <h2>Meu carrinho</h2>
           <CartItems>

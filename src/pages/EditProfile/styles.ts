@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { shade, lighten } from 'polished';
+import { shade } from 'polished';
 
 import profileBackground from '../../assets/profile_background.jpg';
 import profileMobileBackground from '../../assets/profile_mobile_background.jpg';
@@ -134,60 +134,4 @@ export const AdminArea = styled.button`
     background: ${shade(0.3, '#2E8CA9')};
   }
   height: 86px;
-`;
-
-export const ButtonPassword = styled.button`
-  height: 50px;
-  width: 150px;
-  color: white;
-  border: 0;
-  border-radius: 10px;
-  background: #1c0c03;
-  margin-top: 12px;
-
-  &:hover {
-    background: ${lighten(0.1, '#1c0c03')};
-  }
-`;
-
-export const ButtonEditProfile = styled.button`
-  height: 50px;
-  width: 150px;
-  color: white;
-  border: 0;
-  border-radius: 10px;
-  background: #b6866e;
-  margin-top: 12px;
-
-  &:hover {
-    background: ${shade(0.1, '#B6866E')};
-  }
-`;
-
-export const ButtonEditAddresses = styled.button`
-  height: 50px;
-  width: 150px;
-  color: #333;
-  border: 0;
-  border-radius: 10px;
-  background: #fff5ea;
-  margin-top: 12px;
-
-  &:hover {
-    background: ${shade(0.1, '#FFF5EA')};
-  }
-`;
-
-export const ButtonMyOrders = styled.button`
-  height: 50px;
-  width: 150px;
-  color: white;
-  border: 0;
-  border-radius: 10px;
-  background: #aa0939;
-  margin-top: 12px;
-
-  &:hover {
-    background: ${shade(0.1, '#AA0939')};
-  }
 `;

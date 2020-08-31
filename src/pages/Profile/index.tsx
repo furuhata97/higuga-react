@@ -1,21 +1,10 @@
 import React, { useCallback, useRef, useState } from 'react';
 import { useHistory } from 'react-router-dom';
-import {
-  FiArrowLeft,
-  FiLogOut,
-  FiUser,
-  FiTerminal,
-  FiMap,
-  FiMapPin,
-  FiPhone,
-  FiMail,
-} from 'react-icons/fi';
+import { FiArrowLeft, FiLogOut } from 'react-icons/fi';
 import * as Yup from 'yup';
 
-import { Form } from '@unform/web';
 import { FormHandles } from '@unform/core';
 
-import Input from '../../components/Input';
 import Footer from '../../components/footer';
 import ModalChangePassword from '../../components/ModalChangePassword';
 
@@ -31,28 +20,17 @@ import {
   ReturnButton,
   LeaveButton,
   Body,
-  ButtonContent,
-  SaveButton,
   AdminArea,
   ButtonPassword,
+  ButtonEditAddresses,
+  ButtonEditProfile,
+  ButtonMyOrders,
 } from './styles';
 import { useToast } from '../../hooks/toast';
 import { useCart } from '../../hooks/cart';
 
-interface ProfileFormValidation {
-  name: string;
-  zip: string;
-  city: string;
-  address: string;
-  phone: string;
-  email: string;
-}
-
 interface ChangePasswordFormValidation {
   name: string;
-  zip_code: string;
-  city: string;
-  address: string;
   phone_number: string;
   email: string;
   old_password: string;
@@ -107,68 +85,27 @@ const Profile: React.FC = () => {
     [addToast, updateUser],
   );
 
-  const handleSubmitNoPassword = useCallback(
-    async (data: ProfileFormValidation) => {
-      try {
-        formRef.current?.setErrors({});
-        const schema = Yup.object().shape({
-          name: Yup.string().required('Nome obrigatório'),
-          email: Yup.string()
-            .required('Email obrigatório')
-            .email('Digite um email válido'),
-          zip: Yup.string().required('CEP obrigatório'),
-          city: Yup.string().required('Cidade obrigatória'),
-          address: Yup.string().required('Endereço obrigatório'),
-          phone: Yup.string().required('Telefone obrigatório'),
-        });
+  const handleEditProfile = useCallback(() => {
+    history.push('/edit-profile');
+  }, [history]);
 
-        await schema.validate(data, {
-          abortEarly: false,
-        });
+  const handleEditAddresses = useCallback(() => {
+    history.push('/addresses');
+  }, [history]);
 
-        const { name, email, zip, city, address, phone } = data;
+  const handleMyOrders = useCallback(() => {
+    history.push('/my-orders');
+  }, [history]);
 
-        const formData = {
-          name,
-          email,
-          zip_code: zip,
-          city,
-          address,
-          phone_number: phone,
-        };
-
-        const response = await api.put('/users/profile', formData);
-        updateUser(response.data);
-
-        // history.push('/');
-
-        addToast({
-          type: 'success',
-          title: 'Perfil atualizado!',
-        });
-      } catch (err) {
-        if (err instanceof Yup.ValidationError) {
-          const errors = getValidationErrors(err);
-          formRef.current?.setErrors(errors);
-
-          return;
-        }
-
-        addToast({
-          type: 'error',
-          title: 'Erro ao atualizar perfil',
-          description: 'Ocorreu um erro ao atualizar as informações do perfil',
-        });
-      }
-    },
-    [addToast, updateUser],
-  );
+  const handleBackClick = useCallback(() => {
+    history.push('/');
+  }, [history]);
 
   return (
     <Background>
       <Container>
         <Header>
-          <ReturnButton onClick={history.goBack}>
+          <ReturnButton onClick={handleBackClick}>
             <FiArrowLeft />
           </ReturnButton>
           <LeaveButton type="button" onClick={handleSignOut}>
@@ -181,54 +118,15 @@ const Profile: React.FC = () => {
           {user?.is_admin ? (
             <AdminArea type="button">Área administrativa</AdminArea>
           ) : null}
-          <h2>Perfil</h2>
-          <Form
-            initialData={{
-              name: user?.name,
-              email: user?.email,
-              zip: user?.zip_code,
-              city: user?.city,
-              address: user?.address,
-              phone: user?.phone_number,
-            }}
-            ref={formRef}
-            onSubmit={handleSubmitNoPassword}
-          >
-            <Input
-              icon={FiUser}
-              name="name"
-              type="text"
-              placeholder="Nome completo"
-            />
-
-            <Input icon={FiTerminal} name="zip" type="text" placeholder="CEP" />
-
-            <Input icon={FiMap} name="city" type="text" placeholder="Cidade" />
-
-            <Input
-              icon={FiMapPin}
-              name="address"
-              type="text"
-              placeholder="Endereço"
-            />
-
-            <Input
-              icon={FiPhone}
-              name="phone"
-              type="text"
-              placeholder="Telefone"
-            />
-
-            <Input
-              icon={FiMail}
-              name="email"
-              type="email"
-              placeholder="Email"
-            />
-            <ButtonContent>
-              <SaveButton type="submit">Salvar</SaveButton>
-            </ButtonContent>
-          </Form>
+          <ButtonEditProfile type="button" onClick={handleEditProfile}>
+            Editar perfil
+          </ButtonEditProfile>
+          <ButtonMyOrders type="button" onClick={handleMyOrders}>
+            Meus pedidos
+          </ButtonMyOrders>
+          <ButtonEditAddresses type="button" onClick={handleEditAddresses}>
+            Meus endereços
+          </ButtonEditAddresses>
           <ButtonPassword type="button" onClick={toggleModal}>
             Alterar senha
           </ButtonPassword>

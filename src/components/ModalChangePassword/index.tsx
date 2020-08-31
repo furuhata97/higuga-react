@@ -15,9 +15,6 @@ import getValidationErrors from '../../utils/getValidationErrors';
 
 interface IUser {
   name: string;
-  zip_code: string;
-  city: string;
-  address: string;
   phone_number: string;
   email: string;
   old_password: string;
@@ -82,9 +79,6 @@ const ModalChangePassword: React.FC<IModalProps> = ({
         const formData = {
           name: user.name,
           email: user.email,
-          zip_code: user.zip_code,
-          city: user.city,
-          address: user.address,
           phone_number: user.phone_number,
           old_password,
           password,

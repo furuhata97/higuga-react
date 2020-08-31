@@ -126,9 +126,9 @@ const OrderResume: React.FC = () => {
             </div>
             <Address>
               <h4>Endereço de entrega:</h4>
-              <p>{user?.address}</p>
+              <p>{user?.addresses[0].address}</p>
               <p>
-                {user?.city} - {user?.zip_code}
+                {user?.addresses[0].city} - {user?.addresses[0].zip_code}
               </p>
               <Link to="/profile">Alterar endereço</Link>
               <h4>Forma de pagamento:</h4>

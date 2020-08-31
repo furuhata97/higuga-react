@@ -3,13 +3,19 @@ import { decode } from 'jsonwebtoken';
 import { isBefore, fromUnixTime } from 'date-fns';
 import api from '../services/api';
 
+interface Address {
+  id: string;
+  zip_code: string;
+  city: string;
+  address: string;
+  is_main: boolean;
+}
+
 interface User {
   id: string;
   name: string;
   email: string;
-  zip_code: string;
-  city: string;
-  address: string;
+  addresses: Address[];
   phone_number: string;
   is_admin: boolean;
 }

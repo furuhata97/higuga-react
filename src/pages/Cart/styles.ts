@@ -5,63 +5,19 @@ export const Container = styled.div`
   display: flex;
   flex-direction: column;
   flex: 1;
-`;
-
-export const Header = styled.header`
-  display: flex;
-  width: 100%;
-  max-height: 100px;
-  align-items: center;
-  justify-content: space-between;
-  background: #f2f2f2;
-
-  img {
-    height: 85px;
-    margin: 12px;
-
-    @media (max-width: 500px) {
-      height: 40px;
-    }
-  }
-`;
-
-export const BackButton = styled.button`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-left: 12px;
-  background: transparent;
-  border: 0;
-  color: #3b3b3b;
-
-  font-size: 18px;
-
-  @media (max-width: 500px) {
-    font-size: 14px;
-  }
-
-  @media (max-width: 280px) {
-    font-size: 12px;
-  }
-
-  svg {
-    margin-right: 8px;
-  }
-
-  &:hover {
-    color: ${lighten(0.2, '#3B3B3B')};
-  }
+  background: #b6866e;
 `;
 
 export const Content = styled.div`
   display: flex;
   flex-direction: column;
   flex: 1;
-  margin-top: 48px;
-  margin-bottom: 8px;
+  margin-top: 32px;
+  margin-bottom: 16px;
 
   h2 {
     margin-left: 32px;
+    margin-bottom: 8px;
   }
 `;
 
