@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { FiPlus } from 'react-icons/fi';
+import swal from 'sweetalert';
 import { useHistory } from 'react-router-dom';
 
 import FooterNav from '../../components/footer';
@@ -14,6 +15,7 @@ import {
   NewAddress,
 } from './styles';
 import { useAuth } from '../../hooks/auth';
+import api from '../../services/api';
 
 interface IAddress {
   id: string;
@@ -25,7 +27,7 @@ interface IAddress {
 
 const Addresses: React.FC = () => {
   const [addresses, setAddresses] = useState<IAddress[]>([]);
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const history = useHistory();
 
   useEffect(() => {
@@ -38,6 +40,65 @@ const Addresses: React.FC = () => {
   const handleAddAddress = useCallback(() => {
     history.push('/new-address');
   }, [history]);
+
+  const handleEditAddress = useCallback(
+    (address: IAddress) => {
+      history.push(`/update-address/${address.id}`);
+    },
+    [history],
+  );
+
+  const handleDelete = useCallback(
+    (address: IAddress) => {
+      swal({
+        title: 'Tem certeza que quer excluir o endereço?',
+        text: 'Uma vez excluído, você não conseguirá recuperar este endereço',
+        icon: 'warning',
+        buttons: ['Cancelar', 'Confirmar'],
+        dangerMode: true,
+      }).then((willDelete) => {
+        if (willDelete) {
+          if (address.is_main) {
+            swal('Não é possível excluir o endereço principal', {
+              icon: 'info',
+            });
+          } else {
+            try {
+              api.delete('/users/delete-address', {
+                data: {
+                  address_id: address.id,
+                },
+              });
+
+              const updatedUser = user;
+
+              if (!updatedUser) {
+                throw new Error();
+              }
+
+              const remainingAddresses = updatedUser.addresses.filter(
+                (add) => add.id !== address.id,
+              );
+
+              updatedUser.addresses = remainingAddresses;
+              setAddresses(remainingAddresses);
+
+              updateUser(updatedUser);
+
+              swal('Endereço excluído com sucesso', {
+                icon: 'success',
+              });
+            } catch (error) {
+              swal('Erro ao excluir endereço', {
+                icon: 'warning',
+              });
+            }
+          }
+        }
+      });
+    },
+    [user, updateUser],
+  );
 
   return (
     <>
@@ -66,8 +127,12 @@ const Addresses: React.FC = () => {
                     <p>CEP: {a.zip_code}</p>
                   </AddressDetail>
                   <AddressButtons>
-                    <button type="button">Alterar</button>
-                    <button type="button">Excluir</button>
+                    <button type="button" onClick={() => handleEditAddress(a)}>
+                      Alterar
+                    </button>
+                    <button type="button" onClick={() => handleDelete(a)}>
+                      Excluir
+                    </button>
                   </AddressButtons>
                 </AddressCard>
               ))}

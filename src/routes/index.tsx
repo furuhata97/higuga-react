@@ -13,6 +13,7 @@ import OrderResume from '../pages/OrderResume';
 import Orders from '../pages/Orders';
 import Addresses from '../pages/Addresses';
 import NewAddress from '../pages/NewAddress';
+import EditAddress from '../pages/EditAddress';
 
 const Routes: React.FC = () => (
   <Switch>
@@ -27,6 +28,7 @@ const Routes: React.FC = () => (
     <Route path="/my-orders" isPrivate component={Orders} />
     <Route path="/addresses" isPrivate component={Addresses} />
     <Route path="/new-address" isPrivate component={NewAddress} />
+    <Route path="/update-address/:id" isPrivate component={EditAddress} />
   </Switch>
 );
 
