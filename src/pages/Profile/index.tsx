@@ -101,6 +101,10 @@ const Profile: React.FC = () => {
     history.push('/');
   }, [history]);
 
+  const handleAdminArea = useCallback(() => {
+    history.push('/admin');
+  }, [history]);
+
   return (
     <Background>
       <Container>
@@ -116,7 +120,9 @@ const Profile: React.FC = () => {
 
         <Body>
           {user?.is_admin ? (
-            <AdminArea type="button">Área administrativa</AdminArea>
+            <AdminArea type="button" onClick={handleAdminArea}>
+              Área administrativa
+            </AdminArea>
           ) : null}
           <ButtonEditProfile type="button" onClick={handleEditProfile}>
             Editar perfil

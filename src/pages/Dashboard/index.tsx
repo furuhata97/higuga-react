@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { FiMinusCircle, FiPlusCircle } from 'react-icons/fi';
+import { FiMinusCircle, FiPlusCircle, FiLoader } from 'react-icons/fi';
+import ReactPaginate from 'react-paginate';
 import HeaderNav from '../../components/header';
 import FooterNav from '../../components/footer';
 
@@ -14,6 +15,7 @@ import {
   SearchTyped,
   CategorySelected,
   FoundProductsContainer,
+  Loading,
   ProductCard,
   ProductImage,
   ProductInfo,
@@ -34,6 +36,7 @@ interface Product {
   stock: number;
   image_url: string;
   quantity: number;
+  hidden: boolean;
 }
 
 interface Category {
@@ -41,15 +44,29 @@ interface Category {
   name: string;
 }
 
+interface Pagination {
+  data: Product[];
+  offset: number;
+  numberPerPage: number;
+  pageCount: number;
+  currentData: Product[];
+}
+
 const Dashboard: React.FC = () => {
   const { searchWord } = useSearch();
   const { addToCart } = useCart();
   const { addToast } = useToast();
-  const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<Category>({
     id: 'null',
     name: 'null',
+  });
+  const [pagination, setPagination] = useState<Pagination>({
+    data: [],
+    offset: 0,
+    numberPerPage: 20,
+    pageCount: 0,
+    currentData: [],
   });
 
   useEffect(() => {
@@ -60,12 +77,27 @@ const Dashboard: React.FC = () => {
         setQuantity.quantity = 0;
         return setQuantity;
       });
-      setProducts(response.data);
+      const visibleProducts = response.data.filter((p: Product) => !p.hidden);
+      setPagination((prevState) => ({
+        ...prevState,
+        data: visibleProducts,
+      }));
     }
 
     loadProducts();
     api.get('/categories').then((response) => setCategories(response.data));
   }, []);
+
+  useEffect(() => {
+    setPagination((prevState) => ({
+      ...prevState,
+      pageCount: prevState.data.length / prevState.numberPerPage,
+      currentData: prevState.data.slice(
+        pagination.offset,
+        pagination.offset + pagination.numberPerPage,
+      ),
+    }));
+  }, [pagination.data, pagination.numberPerPage, pagination.offset]);
 
   useEffect(() => {
     async function searchProducts(): Promise<void> {
@@ -83,18 +115,36 @@ const Dashboard: React.FC = () => {
           return setQuantity;
         });
 
-        setProducts(response.data);
+        const visibleProducts = response.data.filter((p: Product) => !p.hidden);
+
+        setPagination({
+          data: visibleProducts,
+          offset: 0,
+          numberPerPage: 20,
+          pageCount: 0,
+          currentData: [],
+        });
         return;
       }
 
       if (selectedCategory.name === 'null' && searchWord === '') {
         const response = await api.get('/products');
+
         response.data.map((product: Product) => {
           const setQuantity = product;
           setQuantity.quantity = 0;
           return setQuantity;
         });
-        setProducts(response.data);
+
+        const visibleProducts = response.data.filter((p: Product) => !p.hidden);
+
+        setPagination({
+          data: visibleProducts,
+          offset: 0,
+          numberPerPage: 20,
+          pageCount: 0,
+          currentData: [],
+        });
         return;
       }
 
@@ -111,7 +161,15 @@ const Dashboard: React.FC = () => {
           return setQuantity;
         });
 
-        setProducts(response.data);
+        const visibleProducts = response.data.filter((p: Product) => !p.hidden);
+
+        setPagination({
+          data: visibleProducts,
+          offset: 0,
+          numberPerPage: 20,
+          pageCount: 0,
+          currentData: [],
+        });
         return;
       }
 
@@ -128,12 +186,29 @@ const Dashboard: React.FC = () => {
           return setQuantity;
         });
 
-        setProducts(response.data);
+        const visibleProducts = response.data.filter((p: Product) => !p.hidden);
+
+        setPagination({
+          data: visibleProducts,
+          offset: 0,
+          numberPerPage: 20,
+          pageCount: 0,
+          currentData: [],
+        });
       }
     }
 
     searchProducts();
   }, [searchWord, selectedCategory]);
+
+  const handlePageClick = useCallback(
+    (e) => {
+      const { selected } = e;
+      const offset = selected * pagination.numberPerPage;
+      setPagination({ ...pagination, offset });
+    },
+    [pagination],
+  );
 
   const handleCategoryButtonClick = useCallback(
     (cateogry: Category) => {
@@ -148,46 +223,53 @@ const Dashboard: React.FC = () => {
 
   const handleAddProductClick = useCallback(
     (id: string) => {
-      setProducts(
-        products.map((product) => {
-          if (product.id !== id) {
-            return product;
-          }
-          if (product.stock < product.quantity + 1) {
-            addToast({
-              type: 'error',
-              title: 'Estoque insuficiente',
-              description:
-                'A quantidade solicitada é maior que o disponível em estoque',
-            });
-            return product;
-          }
-          const changeQuantity = product;
-          changeQuantity.quantity += 1;
-          return changeQuantity;
-        }),
-      );
+      const newData = pagination.data.map((product) => {
+        if (product.id !== id) {
+          return product;
+        }
+        if (product.stock < product.quantity + 1) {
+          addToast({
+            type: 'error',
+            title: 'Estoque insuficiente',
+            description:
+              'A quantidade solicitada é maior que o disponível em estoque',
+          });
+          return product;
+        }
+
+        const changeQuantity = product;
+        changeQuantity.quantity += 1;
+        return changeQuantity;
+      });
+
+      setPagination((oldState) => ({
+        ...oldState,
+        data: newData,
+      }));
     },
-    [products, addToast],
+    [pagination.data, addToast],
   );
 
   const handleRemoveProductClick = useCallback(
     (id: string) => {
-      setProducts(
-        products.map((product) => {
-          if (product.id !== id) {
-            return product;
-          }
-          if (product.quantity - 1 < 0) {
-            return product;
-          }
-          const changeQuantity = product;
-          changeQuantity.quantity -= 1;
-          return changeQuantity;
-        }),
-      );
+      const newData = pagination.data.map((product) => {
+        if (product.id !== id) {
+          return product;
+        }
+        if (product.quantity - 1 < 0) {
+          return product;
+        }
+        const changeQuantity = product;
+        changeQuantity.quantity -= 1;
+        return changeQuantity;
+      });
+
+      setPagination((oldState) => ({
+        ...oldState,
+        data: newData,
+      }));
     },
-    [products],
+    [pagination.data],
   );
 
   const handleAddToCartClick = useCallback(
@@ -234,8 +316,19 @@ const Dashboard: React.FC = () => {
           ) : null}
 
           <FoundProductsContainer>
-            {products.length === 0 ? <h3>Nenhum produto encontrado</h3> : null}
-            {products.map((product) => (
+            {!pagination.currentData.length && pagination.data.length ? (
+              <Loading>
+                <FiLoader size={24} />
+
+                <p>Carregando</p>
+              </Loading>
+            ) : null}
+            {!pagination.currentData.length && !pagination.data.length ? (
+              <Loading>
+                <p>Nenhum Produto Encontrado</p>
+              </Loading>
+            ) : null}
+            {pagination.currentData.map((product) => (
               <ProductCard key={product.id}>
                 <div className="top-product">
                   <ProductImage>
@@ -280,6 +373,19 @@ const Dashboard: React.FC = () => {
               </ProductCard>
             ))}
           </FoundProductsContainer>
+          {pagination.currentData.length && pagination.pageCount > 0.5 ? (
+            <ReactPaginate
+              previousLabel="<"
+              nextLabel=">"
+              breakLabel="..."
+              pageCount={pagination.pageCount}
+              marginPagesDisplayed={2}
+              pageRangeDisplayed={2}
+              onPageChange={handlePageClick}
+              containerClassName="pagination"
+              activeClassName="active"
+            />
+          ) : null}
         </ProductsContainer>
       </Container>
       <FooterNav />

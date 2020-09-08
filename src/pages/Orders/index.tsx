@@ -39,6 +39,9 @@ interface IOrder {
   discount: string;
   order_products: OrderProducts[];
   created_at: string;
+  zip_code: string;
+  address: string;
+  city: string;
 }
 
 const Orders: React.FC = () => {
@@ -88,6 +91,10 @@ const Orders: React.FC = () => {
                   </ProductDetail>
                 ))}
                 <OrderFooter>
+                  <em>
+                    {o.address} - {o.city} CEP: {o.zip_code}
+                  </em>
+                  <br />
                   <strong>
                     Desconto {formatter.format(Number(o.discount))}
                   </strong>

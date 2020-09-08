@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useRef } from 'react';
 import { useHistory } from 'react-router-dom';
 import { FiArrowLeft, FiLogOut, FiUser, FiPhone, FiMail } from 'react-icons/fi';
 import * as Yup from 'yup';

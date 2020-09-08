@@ -1,10 +1,5 @@
 import React, { useCallback, useMemo } from 'react';
-import {
-  FiArrowLeft,
-  FiTrash,
-  FiMinusCircle,
-  FiPlusCircle,
-} from 'react-icons/fi';
+import { FiTrash, FiMinusCircle, FiPlusCircle } from 'react-icons/fi';
 
 import Select from '@material-ui/core/Select';
 
@@ -102,7 +97,7 @@ const Cart: React.FC = () => {
       return;
     }
 
-    history.push('/order_resume');
+    history.push('/order-resume');
   }, [addToast, history, paymentMethod, user]);
 
   return (

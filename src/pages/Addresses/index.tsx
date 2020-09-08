@@ -63,36 +63,37 @@ const Addresses: React.FC = () => {
               icon: 'info',
             });
           } else {
-            try {
-              api.delete('/users/delete-address', {
+            api
+              .delete('/users/delete-address', {
                 data: {
                   address_id: address.id,
                 },
+              })
+              .then(() => {
+                const updatedUser = user;
+
+                if (!updatedUser) {
+                  throw new Error();
+                }
+
+                const remainingAddresses = updatedUser.addresses.filter(
+                  (add) => add.id !== address.id,
+                );
+
+                updatedUser.addresses = remainingAddresses;
+                setAddresses(remainingAddresses);
+
+                updateUser(updatedUser);
+
+                swal('Endereço excluído com sucesso', {
+                  icon: 'success',
+                });
+              })
+              .catch((err) => {
+                swal(`Erro ao excluir endereço: ${err}`, {
+                  icon: 'warning',
+                });
               });
-
-              const updatedUser = user;
-
-              if (!updatedUser) {
-                throw new Error();
-              }
-
-              const remainingAddresses = updatedUser.addresses.filter(
-                (add) => add.id !== address.id,
-              );
-
-              updatedUser.addresses = remainingAddresses;
-              setAddresses(remainingAddresses);
-
-              updateUser(updatedUser);
-
-              swal('Endereço excluído com sucesso', {
-                icon: 'success',
-              });
-            } catch (error) {
-              swal('Erro ao excluir endereço', {
-                icon: 'warning',
-              });
-            }
           }
         }
       });

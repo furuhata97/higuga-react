@@ -37,7 +37,9 @@ interface ITokenPayload {
 }
 
 interface AuthContextState {
+  address: Address;
   user: User | null;
+  chooseAddress(add: Address): void;
   signIn(credentials: SignInCredentials): Promise<void>;
   signOut(): void;
   updateUser(user: User): void;
@@ -62,6 +64,21 @@ export const AuthProvider: React.FC = ({ children }) => {
     return {} as AuthState;
   });
 
+  const [address, setAddress] = useState<Address>(() => {
+    const localAddress = localStorage.getItem('@Higuga:address');
+    console.log(localAddress);
+
+    if (localAddress) {
+      return JSON.parse(localAddress);
+    }
+    return {} as Address;
+  });
+
+  const chooseAddress = useCallback((chosenAddress: Address) => {
+    setAddress(chosenAddress);
+    localStorage.setItem('Higuga:address', JSON.stringify(chosenAddress));
+  }, []);
+
   const signIn = useCallback(async ({ email, password }) => {
     const response = await api.post('sessions', {
       email,
@@ -72,6 +89,8 @@ export const AuthProvider: React.FC = ({ children }) => {
 
     localStorage.setItem('@Higuga:token', token);
     localStorage.setItem('@Higuga:user', JSON.stringify(user));
+    const userAddress = user.addresses.find((add: Address) => add.is_main);
+    localStorage.setItem('@Higuga:address', JSON.stringify(userAddress));
 
     api.defaults.headers.authorization = `Bearer ${token}`;
 
@@ -81,6 +100,7 @@ export const AuthProvider: React.FC = ({ children }) => {
   const signOut = useCallback(() => {
     localStorage.removeItem('@Higuga:token');
     localStorage.removeItem('@Higuga:user');
+    localStorage.removeItem('@Higuga:address');
 
     // localStorage.removeItem('@Higuga:cartProducts');
     // localStorage.removeItem('@Higuga:cartQuantity');
@@ -104,7 +124,14 @@ export const AuthProvider: React.FC = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user: data.user, signIn, signOut, updateUser }}
+      value={{
+        user: data.user,
+        address,
+        chooseAddress,
+        signIn,
+        signOut,
+        updateUser,
+      }}
     >
       {children}
     </AuthContext.Provider>

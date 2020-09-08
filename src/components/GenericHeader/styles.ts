@@ -2,13 +2,13 @@ import styled from 'styled-components';
 import { shade } from 'polished';
 
 export const Header = styled.header`
-  width: 100%;
   min-height: 70px;
   background: rgba(170, 67, 0, 0.84);
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 12px;
+  width: 100%;
 
   button {
     display: flex;
@@ -25,8 +25,12 @@ export const Header = styled.header`
   img {
     max-height: 75px;
 
-    @media (max-width: 320px) {
+    @media (max-width: 450px) {
       max-height: 50px;
+    }
+
+    @media (max-width: 320px) {
+      max-height: 45px;
     }
   }
 `;

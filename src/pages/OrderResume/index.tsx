@@ -1,5 +1,4 @@
 import React, { useCallback, useMemo } from 'react';
-import { FiArrowLeft } from 'react-icons/fi';
 import { useHistory, Link } from 'react-router-dom';
 
 import { useAuth } from '../../hooks/auth';
@@ -7,14 +6,12 @@ import { useCart } from '../../hooks/cart';
 import api from '../../services/api';
 
 import FooterNav from '../../components/footer';
+import Header from '../../components/GenericHeader';
 
 import { formatter } from '../../utils/moneyFormatter';
-import logo from '../../assets/higugaLogo.svg';
 
 import {
   Container,
-  Header,
-  BackButton,
   Content,
   CartItems,
   ItemsHeader,
@@ -26,7 +23,7 @@ import {
 import { useToast } from '../../hooks/toast';
 
 const OrderResume: React.FC = () => {
-  const { user } = useAuth();
+  const { address } = useAuth();
   const { addToast } = useToast();
   const { cart, paymentMethod, cleanCart } = useCart();
 
@@ -35,10 +32,6 @@ const OrderResume: React.FC = () => {
   if (cart.length === 0 || paymentMethod === '') {
     history.push('/');
   }
-
-  const handleBackClick = useCallback(() => {
-    history.push('/cart');
-  }, [history]);
 
   const cartTotal = useMemo(() => {
     const { amount } = cart.reduce(
@@ -68,6 +61,9 @@ const OrderResume: React.FC = () => {
         products,
         payment_method: paymentMethod,
         discount: 0,
+        zip_code: address.zip_code,
+        city: address.city,
+        address: address.address,
       });
 
       cleanCart();
@@ -77,18 +73,12 @@ const OrderResume: React.FC = () => {
         title: 'Erro ao realizar pedido',
       });
     }
-  }, [cart, paymentMethod, addToast, cleanCart]);
+  }, [cart, paymentMethod, addToast, cleanCart, address]);
 
   return (
     <>
       <Container>
-        <Header>
-          <BackButton type="button" onClick={handleBackClick}>
-            <FiArrowLeft size={24} />
-            Voltar
-          </BackButton>
-          <img src={logo} alt="Logo do Higuga" />
-        </Header>
+        <Header back="/cart" text="Voltar" />
         <Content>
           <h2>Resumo do pedido</h2>
           <small>
@@ -126,11 +116,11 @@ const OrderResume: React.FC = () => {
             </div>
             <Address>
               <h4>Endereço de entrega:</h4>
-              <p>{user?.addresses[0].address}</p>
+              <p>{address?.address}</p>
               <p>
-                {user?.addresses[0].city} - {user?.addresses[0].zip_code}
+                {address?.city} - {address?.zip_code}
               </p>
-              <Link to="/profile">Alterar endereço</Link>
+              <Link to="/select-address">Alterar endereço</Link>
               <h4>Forma de pagamento:</h4>
               <p>{paymentMethod === 'CARTAO' ? 'Cartão' : 'Dinheiro'}</p>
               <small>Realizar o pagamento no momento da entrega</small>

@@ -21,9 +21,9 @@ const Route: React.FC<RouteProps> = ({
 }) => {
   const { user } = useAuth();
   if (user && isAdmin) {
-    console.log('Estou logado e preciso ser admin');
+    // console.log('Estou logado e preciso ser admin');
     if (!user.is_admin) {
-      console.log('Estou logado e não sou admin');
+      // console.log('Estou logado e não sou admin');
       return (
         <ReactRoute
           {...rest}
@@ -41,9 +41,9 @@ const Route: React.FC<RouteProps> = ({
   }
 
   if (!!user === isPrivate) {
-    console.log('Estou logado? - ', !!user);
-    console.log(' É privado? ', isPrivate);
-    console.log(' Retorno ', !!user === isPrivate);
+    // console.log('Estou logado? - ', !!user);
+    // console.log(' É privado? ', isPrivate);
+    // console.log(' Retorno ', !!user === isPrivate);
     return (
       <ReactRoute
         {...rest}
@@ -55,9 +55,9 @@ const Route: React.FC<RouteProps> = ({
   }
 
   if (user && !isPrivate) {
-    console.log(
-      'Estou logado e a rota não é privada, posso acessa-la, a menos se for login ou register',
-    );
+    // console.log(
+    //   'Estou logado e a rota não é privada, posso acessa-la, a menos se for login ou register',
+    // );
     return (
       <ReactRoute
         {...rest}
