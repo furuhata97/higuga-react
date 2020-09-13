@@ -1,12 +1,9 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { FiArrowLeft } from 'react-icons/fi';
+import React, { useEffect, useState } from 'react';
 import { format, parseISO, subHours } from 'date-fns';
-import { useHistory } from 'react-router-dom';
 import api from '../../services/api';
 
 import { formatter } from '../../utils/moneyFormatter';
 
-import logo from '../../assets/higugaLogo.svg';
 import FooterNav from '../../components/footer';
 import Header from '../../components/GenericHeader';
 import {
@@ -46,7 +43,6 @@ interface IOrder {
 
 const Orders: React.FC = () => {
   const [orders, setOrders] = useState<IOrder[]>([]);
-  const history = useHistory();
 
   useEffect(() => {
     api.get('/orders/my-orders').then((response) => setOrders(response.data));

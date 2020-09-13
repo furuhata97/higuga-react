@@ -16,6 +16,7 @@ import NewAddress from '../pages/NewAddress';
 import EditAddress from '../pages/EditAddress';
 import SelectAddress from '../pages/SelectAddress';
 import AdminArea from '../pages/AdminArea';
+import Profit from '../pages/Profit';
 
 const Routes: React.FC = () => (
   <Switch>
@@ -33,6 +34,7 @@ const Routes: React.FC = () => (
     <Route path="/new-address" isPrivate component={NewAddress} />
     <Route path="/update-address/:id" isPrivate component={EditAddress} />
     <Route path="/admin" isPrivate isAdmin component={AdminArea} />
+    <Route path="/profit" isPrivate isAdmin component={Profit} />
   </Switch>
 );
 

@@ -11,6 +11,10 @@ import {
 import Header from '../../components/GenericHeader';
 import Products from '../Products';
 import Categories from '../Categories';
+import Clients from '../Clients';
+import Reports from '../Reports';
+import NewSale from '../NewSale';
+import UnfinishedSales from '../UnfinishedSales';
 
 const AdminArea: React.FC = () => {
   const [hideClick, setHideClick] = useState(false);
@@ -65,7 +69,15 @@ const AdminArea: React.FC = () => {
               isSelected={selectedOption === 5}
             >
               {' '}
-              Vendas
+              Nova Venda
+            </MenuButton>
+            <MenuButton
+              type="button"
+              onClick={() => handleSelectedOptionClick(6)}
+              isSelected={selectedOption === 6}
+            >
+              {' '}
+              Vendas em Aberto
             </MenuButton>
           </div>
           <button type="button" onClick={handleHideClick}>
@@ -76,6 +88,10 @@ const AdminArea: React.FC = () => {
           <span>Área administrativa</span>
           {selectedOption === 1 ? <Products /> : null}
           {selectedOption === 2 ? <Categories /> : null}
+          {selectedOption === 3 ? <Clients /> : null}
+          {selectedOption === 4 ? <Reports /> : null}
+          {selectedOption === 5 ? <NewSale /> : null}
+          {selectedOption === 6 ? <UnfinishedSales /> : null}
         </ItemContainer>
       </Content>
     </Container>

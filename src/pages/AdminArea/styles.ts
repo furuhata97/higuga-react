@@ -12,8 +12,7 @@ interface MenuButtonProps {
 export const Container = styled.div`
   display: flex;
   flex-direction: column;
-  height: 100%;
-  width: 100%;
+  flex: 1;
 `;
 
 export const Content = styled.div`
@@ -22,7 +21,7 @@ export const Content = styled.div`
   height: 100%;
   width: 100%;
 
-  @media (max-width: 300px) {
+  @media (max-width: 450px) {
     flex-direction: column;
   }
 `;
@@ -56,8 +55,8 @@ export const LeftMenu = styled.aside<LeftMenuProps>`
           width: 150px;
         `}
 
-  @media (max-width: 300px) {
-    height: 30px;
+  @media (max-width: 450px) {
+    height: 64px;
 
     ${(props) =>
       props.isHidden
@@ -83,7 +82,7 @@ export const LeftMenu = styled.aside<LeftMenuProps>`
     width: 100%;
     background: #fff5ea;
 
-    @media (max-width: 300px) {
+    @media (max-width: 450px) {
       flex-direction: row;
       overflow: scroll;
     }
@@ -94,6 +93,13 @@ export const LeftMenu = styled.aside<LeftMenuProps>`
 
       & + button {
         border-top: 1px solid #c2c2c2;
+      }
+
+      @media (max-width: 450px) {
+        height: 100%;
+        & + button {
+          border-top: 0;
+        }
       }
     }
   }
@@ -129,7 +135,7 @@ export const ItemContainer = styled.div`
     color: #282828;
     font-size: 14px;
 
-    @media (max-width: 300px) {
+    @media (max-width: 450px) {
       font-size: 12px;
     }
   }

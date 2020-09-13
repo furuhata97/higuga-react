@@ -70,6 +70,7 @@ const AddProduct: React.FC<IAddProductProps> = ({
   const [selectedCategory, setSelectedCategory] = useState('');
   const [uploadedFile, setUploadedFile] = useState(noPic);
   const [fileFormData, setFileFormData] = useState(new FormData());
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     api
@@ -106,6 +107,7 @@ const AddProduct: React.FC<IAddProductProps> = ({
       data: IAddProductForm,
       { resetForm }: FormikHelpers<IAddProductForm>,
     ) => {
+      setIsSubmitting(true);
       try {
         fileFormData.append('name', data.name);
         fileFormData.append('price', String(data.price));
@@ -125,15 +127,31 @@ const AddProduct: React.FC<IAddProductProps> = ({
           title: 'Produto atualizado',
         });
         setActionType('');
+        setIsSubmitting(false);
       } catch (err) {
+        setIsSubmitting(false);
+        const f = fileFormData;
+        f.delete('name');
+        f.delete('price');
+        f.delete('category_id');
+        f.delete('barcode');
+        f.delete('stock');
+        setFileFormData(f);
         addToast({
           type: 'error',
           title: 'Ocorreu um erro ao adicionar o produto',
-          description: `${err}`,
+          description: `${err.message}`,
         });
       }
     },
-    [addToast, selectedCategory, fileFormData, setActionType, setProducts],
+    [
+      addToast,
+      selectedCategory,
+      fileFormData,
+      setActionType,
+      setProducts,
+      pagination,
+    ],
   );
 
   return (
@@ -172,14 +190,7 @@ const AddProduct: React.FC<IAddProductProps> = ({
           })}
         >
           {(props: FormikProps<IAddProductForm>) => {
-            const {
-              values,
-              touched,
-              errors,
-              handleBlur,
-              handleChange,
-              isSubmitting,
-            } = props;
+            const { values, touched, errors, handleBlur, handleChange } = props;
 
             return (
               <Form>
@@ -292,7 +303,7 @@ const AddProduct: React.FC<IAddProductProps> = ({
                     <Button
                       type="submit"
                       color="primary"
-                      disabled={uploadedFile === noPic}
+                      disabled={isSubmitting}
                     >
                       ADICIONAR PRODUTO
                     </Button>

@@ -70,6 +70,7 @@ const EditProduct: React.FC<IEditProductProps> = ({
   const [selectedCategory, setSelectedCategory] = useState(product.category_id);
   const [uploadedFile, setUploadedFile] = useState(product.image_url);
   const [fileFormData, setFileFormData] = useState(new FormData());
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     api
@@ -106,6 +107,7 @@ const EditProduct: React.FC<IEditProductProps> = ({
       data: IEditProductForm,
       { resetForm }: FormikHelpers<IEditProductForm>,
     ) => {
+      setIsSubmitting(true);
       try {
         fileFormData.append('id', product.id);
         fileFormData.append('name', data.name);
@@ -126,11 +128,20 @@ const EditProduct: React.FC<IEditProductProps> = ({
           title: 'Produto atualizado',
         });
         setActionType('');
+        setIsSubmitting(false);
       } catch (err) {
+        setIsSubmitting(false);
+        const f = fileFormData;
+        f.delete('name');
+        f.delete('price');
+        f.delete('category_id');
+        f.delete('barcode');
+        f.delete('stock');
+        setFileFormData(f);
         addToast({
           type: 'error',
           title: 'Ocorreu um erro ao atualizar o produto',
-          description: `${err}`,
+          description: `${err.message}`,
         });
       }
     },
@@ -174,14 +185,7 @@ const EditProduct: React.FC<IEditProductProps> = ({
           })}
         >
           {(props: FormikProps<IEditProductForm>) => {
-            const {
-              values,
-              touched,
-              errors,
-              handleBlur,
-              handleChange,
-              isSubmitting,
-            } = props;
+            const { values, touched, errors, handleBlur, handleChange } = props;
 
             return (
               <Form>

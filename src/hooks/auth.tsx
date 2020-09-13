@@ -66,7 +66,6 @@ export const AuthProvider: React.FC = ({ children }) => {
 
   const [address, setAddress] = useState<Address>(() => {
     const localAddress = localStorage.getItem('@Higuga:address');
-    console.log(localAddress);
 
     if (localAddress) {
       return JSON.parse(localAddress);
