@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import debounce from 'lodash.debounce';
 
-import { FiPlus, FiLoader } from 'react-icons/fi';
+import { FiPlus } from 'react-icons/fi';
 import swal from 'sweetalert';
 import ReactPaginate from 'react-paginate';
 
@@ -12,7 +12,6 @@ import {
   NewProduct,
   ProductCard,
   ProductButtons,
-  Loading,
 } from './styles';
 
 import api from '../../services/api';
