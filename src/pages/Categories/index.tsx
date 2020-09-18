@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 
-import { FiPlus, FiLoader } from 'react-icons/fi';
+import { FiPlus } from 'react-icons/fi';
 import ReactPaginate from 'react-paginate';
 
 import {
@@ -8,7 +8,6 @@ import {
   NewCategory,
   CategoryCard,
   CategoryButtons,
-  Loading,
 } from './styles';
 
 import api from '../../services/api';
@@ -157,34 +156,24 @@ const Categories: React.FC = () => {
         <CategoryContainer>
           <p>Categorias</p>
           <input type="text" onChange={handleChangeInput} />
-          {!pagination.data.length && !allCategories.length ? (
-            <div>
-              <Loading>
-                <FiLoader size={24} />
-
-                <p>Carregando</p>
-              </Loading>
-            </div>
-          ) : (
-            <div>
-              <NewCategory>
-                <button type="button" onClick={handleClickAdd}>
-                  <FiPlus size={32} />
-                  <span>Adicionar nova categoria</span>
-                </button>
-              </NewCategory>
-              {pagination.currentData.map((p) => (
-                <CategoryCard key={p.id}>
-                  <span>{p.name}</span>
-                  <CategoryButtons>
-                    <button type="button" onClick={() => handleClickEdit(p)}>
-                      Editar
-                    </button>
-                  </CategoryButtons>
-                </CategoryCard>
-              ))}
-            </div>
-          )}
+          <div>
+            <NewCategory>
+              <button type="button" onClick={handleClickAdd}>
+                <FiPlus size={32} />
+                <span>Adicionar nova categoria</span>
+              </button>
+            </NewCategory>
+            {pagination.currentData.map((p) => (
+              <CategoryCard key={p.id}>
+                <span>{p.name}</span>
+                <CategoryButtons>
+                  <button type="button" onClick={() => handleClickEdit(p)}>
+                    Editar
+                  </button>
+                </CategoryButtons>
+              </CategoryCard>
+            ))}
+          </div>
           {pagination.currentData.length && pagination.pageCount > 0.5 ? (
             <ReactPaginate
               previousLabel="<"
