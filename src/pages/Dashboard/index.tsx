@@ -421,62 +421,65 @@ const Dashboard: React.FC = () => {
           ) : null}
 
           <FoundProductsContainer>
+            {!pagination.products.length && !isLoading ? (
+              <Loading>
+                <p>Nenhum Produto Encontrado</p>
+              </Loading>
+            ) : null}
             {isLoading ? (
               <Loading>
                 <FiLoader size={24} />
 
                 <p>Carregando</p>
               </Loading>
-            ) : null}
-            {!pagination.products.length && !isLoading ? (
-              <Loading>
-                <p>Nenhum Produto Encontrado</p>
-              </Loading>
-            ) : null}
-            {pagination.products.map((product) => (
-              <ProductCard key={product.id}>
-                <div className="top-product">
-                  <ProductImage>
-                    <img src={product.image_url} alt="" />
-                  </ProductImage>
-                  <ProductInfo>
-                    <p>R$ {product.price}</p>
-                    <p>{product.name}</p>
-                  </ProductInfo>
-                </div>
-                <HandleCardAmount>
-                  <div>
-                    <SetQuantityButton
-                      type="button"
-                      onClick={() => handleRemoveProductClick(product.id)}
-                    >
-                      <FiMinusCircle />
-                    </SetQuantityButton>
-                    <Quantity>
-                      <span>{product.quantity}</span>
-                    </Quantity>
-                    <SetQuantityButton
-                      type="button"
-                      onClick={() => handleAddProductClick(product.id)}
-                    >
-                      <FiPlusCircle />
-                    </SetQuantityButton>
-                  </div>
-                  {product.stock === 0 ? (
-                    <button type="button" disabled>
-                      ESGOTADO
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => handleAddToCartClick(product)}
-                    >
-                      ADICIONAR AO CARRINHO
-                    </button>
-                  )}
-                </HandleCardAmount>
-              </ProductCard>
-            ))}
+            ) : (
+              <>
+                {pagination.products.map((product) => (
+                  <ProductCard key={product.id}>
+                    <div className="top-product">
+                      <ProductImage>
+                        <img src={product.image_url} alt="" />
+                      </ProductImage>
+                      <ProductInfo>
+                        <p>R$ {product.price}</p>
+                        <p>{product.name}</p>
+                      </ProductInfo>
+                    </div>
+                    <HandleCardAmount>
+                      <div>
+                        <SetQuantityButton
+                          type="button"
+                          onClick={() => handleRemoveProductClick(product.id)}
+                        >
+                          <FiMinusCircle />
+                        </SetQuantityButton>
+                        <Quantity>
+                          <span>{product.quantity}</span>
+                        </Quantity>
+                        <SetQuantityButton
+                          type="button"
+                          onClick={() => handleAddProductClick(product.id)}
+                        >
+                          <FiPlusCircle />
+                        </SetQuantityButton>
+                      </div>
+                      {product.stock === 0 ? (
+                        <button type="button" disabled>
+                          ESGOTADO
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleAddToCartClick(product)}
+                        >
+                          ADICIONAR AO CARRINHO
+                        </button>
+                      )}
+                    </HandleCardAmount>
+                  </ProductCard>
+                ))}
+              </>
+            )}
           </FoundProductsContainer>
           {pagination.size / pagination.take > 1 ? (
             <ReactPaginate
