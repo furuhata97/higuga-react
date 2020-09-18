@@ -266,50 +266,37 @@ const Products: React.FC = () => {
         <ProductContainer>
           <p>Produtos</p>
           <input type="text" onChange={handleChangeInput} value={searchWord} />
-          {!pagination.products.length ? (
-            <div>
-              <Loading>
-                <FiLoader size={24} />
-
-                <p>Carregando</p>
-              </Loading>
-            </div>
-          ) : (
-            <div>
-              <NewProduct>
-                <button type="button" onClick={handleClickAdd}>
-                  <FiPlus size={32} />
-                  <span>Adicionar novo produto</span>
-                </button>
-              </NewProduct>
-              {pagination.products.map((p) => (
-                <ProductCard key={p.id}>
-                  <img src={p.image_url} alt={`Foto do produto ${p.name}`} />
-                  <span>{p.name}</span>
-                  <span>{formatter.format(p.price)}</span>
-                  <span>Estoque: {p.stock}</span>
-                  <ProductButtons>
-                    <button type="button" onClick={() => handleChangeStock(p)}>
-                      Adicionar estoque
-                    </button>
-                    <button type="button" onClick={() => handleClickEdit(p)}>
-                      Editar
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleClickHidden(p.id)}
-                    >
-                      {p.hidden ? (
-                        <span>Deixar visível</span>
-                      ) : (
-                        <span>Ocultar</span>
-                      )}
-                    </button>
-                  </ProductButtons>
-                </ProductCard>
-              ))}
-            </div>
-          )}
+          <div>
+            <NewProduct>
+              <button type="button" onClick={handleClickAdd}>
+                <FiPlus size={32} />
+                <span>Adicionar novo produto</span>
+              </button>
+            </NewProduct>
+            {pagination.products.map((p) => (
+              <ProductCard key={p.id}>
+                <img src={p.image_url} alt={`Foto do produto ${p.name}`} />
+                <span>{p.name}</span>
+                <span>{formatter.format(p.price)}</span>
+                <span>Estoque: {p.stock}</span>
+                <ProductButtons>
+                  <button type="button" onClick={() => handleChangeStock(p)}>
+                    Adicionar estoque
+                  </button>
+                  <button type="button" onClick={() => handleClickEdit(p)}>
+                    Editar
+                  </button>
+                  <button type="button" onClick={() => handleClickHidden(p.id)}>
+                    {p.hidden ? (
+                      <span>Deixar visível</span>
+                    ) : (
+                      <span>Ocultar</span>
+                    )}
+                  </button>
+                </ProductButtons>
+              </ProductCard>
+            ))}
+          </div>
           {pagination.size / pagination.take > 1 ? (
             <ReactPaginate
               previousLabel="<"
