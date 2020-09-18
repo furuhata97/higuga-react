@@ -61,44 +61,6 @@ export const ProductContainer = styled.div`
   }
 `;
 
-export const NewProduct = styled.div`
-  background: #fff;
-  border-radius: 10px;
-  margin: 12px 8px;
-  border: 2px dashed #c7c7c7;
-  height: 340px;
-  width: 250px;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  align-items: center;
-  justify-content: center;
-
-  @media (max-width: 450px) {
-    height: 332px;
-    width: 220px;
-  }
-
-  @media (max-width: 340px) {
-    height: 240px;
-    width: 160px;
-  }
-
-  button {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    background: transparent;
-    border: transparent;
-    color: #c7c7c7;
-
-    &:hover {
-      color: ${shade(0.3, '#c7c7c7')};
-    }
-  }
-`;
-
 export const ProductCard = styled.div`
   background: #fff;
   border-radius: 10px;

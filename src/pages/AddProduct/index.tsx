@@ -47,23 +47,25 @@ interface IAddProductForm {
 }
 
 interface Pagination {
-  data: IProduct[];
-  offset: number;
-  numberPerPage: number;
-  pageCount: number;
-  currentData: IProduct[];
+  products: IProduct[];
+  size: number;
+  skip: number;
+  take: number;
+  type: string;
 }
+
+const ELEMENTS_PER_PAGE = 15;
+const INITIAL_SKIP = 0;
+const REQUEST_TYPE = 'private';
 
 interface IAddProductProps {
   setActionType(action: string): void;
   setProducts(pagination: Pagination): void;
-  pagination: Pagination;
 }
 
 const AddProduct: React.FC<IAddProductProps> = ({
   setActionType,
   setProducts,
-  pagination,
 }) => {
   const { addToast } = useToast();
   const [categories, setCategories] = useState<ICategory[]>([]);
@@ -116,10 +118,19 @@ const AddProduct: React.FC<IAddProductProps> = ({
         fileFormData.append('stock', String(data.stock));
 
         await api.post('/products', fileFormData);
-        const response = await api.get('/products');
+        const response = await api.get('/products', {
+          params: {
+            take: ELEMENTS_PER_PAGE,
+            skip: INITIAL_SKIP,
+            type: REQUEST_TYPE,
+          },
+        });
         setProducts({
-          ...pagination,
-          data: response.data,
+          products: response.data[0],
+          take: ELEMENTS_PER_PAGE,
+          skip: INITIAL_SKIP,
+          size: response.data[1],
+          type: REQUEST_TYPE,
         });
         resetForm({});
         addToast({
@@ -128,6 +139,7 @@ const AddProduct: React.FC<IAddProductProps> = ({
         });
         setActionType('');
         setIsSubmitting(false);
+        setActionType('');
       } catch (err) {
         setIsSubmitting(false);
         const f = fileFormData;
@@ -144,14 +156,7 @@ const AddProduct: React.FC<IAddProductProps> = ({
         });
       }
     },
-    [
-      addToast,
-      selectedCategory,
-      fileFormData,
-      setActionType,
-      setProducts,
-      pagination,
-    ],
+    [addToast, selectedCategory, fileFormData, setActionType, setProducts],
   );
 
   return (
@@ -233,6 +238,7 @@ const AddProduct: React.FC<IAddProductProps> = ({
                       error={touched.barcode && Boolean(errors.barcode)}
                       margin="dense"
                       variant="outlined"
+                      inputProps={{ maxLength: 13 }}
                       fullWidth
                       required
                     />

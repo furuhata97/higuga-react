@@ -18,8 +18,7 @@ export const Container = styled.div`
 export const Content = styled.div`
   background: #f2f2f2;
   display: flex;
-  height: 100%;
-  width: 100%;
+  flex: 1;
 
   @media (max-width: 450px) {
     flex-direction: column;

@@ -5,6 +5,8 @@ import Route from './Route';
 
 import Login from '../pages/LogIn';
 import Register from '../pages/Register';
+import ForgotPassword from '../pages/ForgotPassword';
+import ResetPassword from '../pages/ResetPassword';
 import Dashboard from '../pages/Dashboard';
 import Profile from '../pages/Profile';
 import EditProfile from '../pages/EditProfile';
@@ -16,13 +18,16 @@ import NewAddress from '../pages/NewAddress';
 import EditAddress from '../pages/EditAddress';
 import SelectAddress from '../pages/SelectAddress';
 import AdminArea from '../pages/AdminArea';
-import Profit from '../pages/Profit';
+import ProfitSales from '../pages/ProfitSales';
+import ProfitOrders from '../pages/ProfitOrders';
 
 const Routes: React.FC = () => (
   <Switch>
     <Route path="/" exact component={Dashboard} />
     <Route path="/login" component={Login} />
     <Route path="/register" component={Register} />
+    <Route path="/forgot" component={ForgotPassword} />
+    <Route path="/reset-password" component={ResetPassword} />
     <Route path="/cart" component={Cart} />
 
     <Route path="/profile" isPrivate component={Profile} />
@@ -34,7 +39,8 @@ const Routes: React.FC = () => (
     <Route path="/new-address" isPrivate component={NewAddress} />
     <Route path="/update-address/:id" isPrivate component={EditAddress} />
     <Route path="/admin" isPrivate isAdmin component={AdminArea} />
-    <Route path="/profit" isPrivate isAdmin component={Profit} />
+    <Route path="/profit-sales" isPrivate isAdmin component={ProfitSales} />
+    <Route path="/profit-orders" isPrivate isAdmin component={ProfitOrders} />
   </Switch>
 );
 

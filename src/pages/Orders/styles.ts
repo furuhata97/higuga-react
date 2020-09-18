@@ -1,7 +1,5 @@
 import styled from 'styled-components';
 
-import ordersBackground from '../../assets/orders_background.jpg';
-
 export const Container = styled.div`
   display: flex;
   flex-direction: column;
@@ -10,7 +8,7 @@ export const Container = styled.div`
 
 export const OrdersContainer = styled.div`
   height: 100%;
-  background: url(${ordersBackground}) no-repeat center;
+  background: #b6866e;
   background-size: cover;
   flex: 1;
   color: #333;

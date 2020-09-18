@@ -15,6 +15,8 @@ import Clients from '../Clients';
 import Reports from '../Reports';
 import NewSale from '../NewSale';
 import UnfinishedSales from '../UnfinishedSales';
+import AdminOrders from '../AdminOrders';
+import ProductRemoval from '../ProductRemoval';
 
 const AdminArea: React.FC = () => {
   const [hideClick, setHideClick] = useState(false);
@@ -79,6 +81,22 @@ const AdminArea: React.FC = () => {
               {' '}
               Vendas em Aberto
             </MenuButton>
+            <MenuButton
+              type="button"
+              onClick={() => handleSelectedOptionClick(7)}
+              isSelected={selectedOption === 7}
+            >
+              {' '}
+              Pedidos
+            </MenuButton>
+            <MenuButton
+              type="button"
+              onClick={() => handleSelectedOptionClick(8)}
+              isSelected={selectedOption === 8}
+            >
+              {' '}
+              Retirar produto
+            </MenuButton>
           </div>
           <button type="button" onClick={handleHideClick}>
             <FiChevronLeft />
@@ -92,6 +110,8 @@ const AdminArea: React.FC = () => {
           {selectedOption === 4 ? <Reports /> : null}
           {selectedOption === 5 ? <NewSale /> : null}
           {selectedOption === 6 ? <UnfinishedSales /> : null}
+          {selectedOption === 7 ? <AdminOrders /> : null}
+          {selectedOption === 8 ? <ProductRemoval /> : null}
         </ItemContainer>
       </Content>
     </Container>

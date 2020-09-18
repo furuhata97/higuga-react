@@ -45,43 +45,57 @@ interface Category {
 }
 
 interface Pagination {
-  data: Product[];
-  offset: number;
-  numberPerPage: number;
-  pageCount: number;
-  currentData: Product[];
+  products: Product[];
+  size: number;
+  skip: number;
+  take: number;
+  type: string;
 }
+
+const ELEMENTS_PER_PAGE = 15;
+const INITIAL_SKIP = 0;
+const REQUEST_TYPE = 'public';
 
 const Dashboard: React.FC = () => {
   const { searchWord } = useSearch();
   const { addToCart } = useCart();
   const { addToast } = useToast();
+  const [isLoading, setIsLoading] = useState(true);
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<Category>({
     id: 'null',
     name: 'null',
   });
   const [pagination, setPagination] = useState<Pagination>({
-    data: [],
-    offset: 0,
-    numberPerPage: 20,
-    pageCount: 0,
-    currentData: [],
+    products: [],
+    take: 0,
+    skip: 0,
+    size: 0,
+    type: REQUEST_TYPE,
   });
 
   useEffect(() => {
     async function loadProducts(): Promise<void> {
-      const response = await api.get('/products');
-      response.data.map((product: Product) => {
+      const response = await api.get('/products', {
+        params: {
+          take: ELEMENTS_PER_PAGE,
+          skip: INITIAL_SKIP,
+          type: REQUEST_TYPE,
+        },
+      });
+      const getProducts = response.data[0].map((product: Product) => {
         const setQuantity = product;
         setQuantity.quantity = 0;
         return setQuantity;
       });
-      const visibleProducts = response.data.filter((p: Product) => !p.hidden);
-      setPagination((prevState) => ({
-        ...prevState,
-        data: visibleProducts,
-      }));
+      setPagination({
+        products: getProducts,
+        take: ELEMENTS_PER_PAGE,
+        skip: INITIAL_SKIP,
+        size: response.data[1],
+        type: REQUEST_TYPE,
+      });
+      setIsLoading(false);
     }
 
     loadProducts();
@@ -89,62 +103,55 @@ const Dashboard: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    setPagination((prevState) => ({
-      ...prevState,
-      pageCount: prevState.data.length / prevState.numberPerPage,
-      currentData: prevState.data.slice(
-        pagination.offset,
-        pagination.offset + pagination.numberPerPage,
-      ),
-    }));
-  }, [pagination.data, pagination.numberPerPage, pagination.offset]);
-
-  useEffect(() => {
     async function searchProducts(): Promise<void> {
+      setIsLoading(true);
       if (selectedCategory.name !== 'null' && searchWord !== '') {
         const response = await api.get('/products/search', {
           params: {
             search_word: searchWord,
             category_id: selectedCategory.id,
+            take: ELEMENTS_PER_PAGE,
+            skip: INITIAL_SKIP,
+            type: REQUEST_TYPE,
           },
         });
-
-        response.data.map((product: Product) => {
+        const getProducts = response.data[0].map((product: Product) => {
           const setQuantity = product;
           setQuantity.quantity = 0;
           return setQuantity;
         });
-
-        const visibleProducts = response.data.filter((p: Product) => !p.hidden);
-
         setPagination({
-          data: visibleProducts,
-          offset: 0,
-          numberPerPage: 20,
-          pageCount: 0,
-          currentData: [],
+          products: getProducts,
+          take: ELEMENTS_PER_PAGE,
+          skip: INITIAL_SKIP,
+          size: response.data[1],
+          type: REQUEST_TYPE,
         });
+        setIsLoading(false);
         return;
       }
 
       if (selectedCategory.name === 'null' && searchWord === '') {
-        const response = await api.get('/products');
-
-        response.data.map((product: Product) => {
+        const response = await api.get('/products', {
+          params: {
+            take: ELEMENTS_PER_PAGE,
+            skip: INITIAL_SKIP,
+            type: REQUEST_TYPE,
+          },
+        });
+        const getProducts = response.data[0].map((product: Product) => {
           const setQuantity = product;
           setQuantity.quantity = 0;
           return setQuantity;
         });
-
-        const visibleProducts = response.data.filter((p: Product) => !p.hidden);
-
         setPagination({
-          data: visibleProducts,
-          offset: 0,
-          numberPerPage: 20,
-          pageCount: 0,
-          currentData: [],
+          products: getProducts,
+          take: ELEMENTS_PER_PAGE,
+          skip: INITIAL_SKIP,
+          size: response.data[1],
+          type: REQUEST_TYPE,
         });
+        setIsLoading(false);
         return;
       }
 
@@ -152,24 +159,25 @@ const Dashboard: React.FC = () => {
         const response = await api.get('/products/search', {
           params: {
             category_id: selectedCategory.id,
+            take: ELEMENTS_PER_PAGE,
+            skip: INITIAL_SKIP,
+            type: REQUEST_TYPE,
           },
         });
 
-        response.data.map((product: Product) => {
+        const getProducts = response.data[0].map((product: Product) => {
           const setQuantity = product;
           setQuantity.quantity = 0;
           return setQuantity;
         });
-
-        const visibleProducts = response.data.filter((p: Product) => !p.hidden);
-
         setPagination({
-          data: visibleProducts,
-          offset: 0,
-          numberPerPage: 20,
-          pageCount: 0,
-          currentData: [],
+          products: getProducts,
+          take: ELEMENTS_PER_PAGE,
+          skip: INITIAL_SKIP,
+          size: response.data[1],
+          type: REQUEST_TYPE,
         });
+        setIsLoading(false);
         return;
       }
 
@@ -177,24 +185,25 @@ const Dashboard: React.FC = () => {
         const response = await api.get('/products/search', {
           params: {
             search_word: searchWord,
+            take: ELEMENTS_PER_PAGE,
+            skip: INITIAL_SKIP,
+            type: REQUEST_TYPE,
           },
         });
 
-        response.data.map((product: Product) => {
+        const getProducts = response.data[0].map((product: Product) => {
           const setQuantity = product;
           setQuantity.quantity = 0;
           return setQuantity;
         });
-
-        const visibleProducts = response.data.filter((p: Product) => !p.hidden);
-
         setPagination({
-          data: visibleProducts,
-          offset: 0,
-          numberPerPage: 20,
-          pageCount: 0,
-          currentData: [],
+          products: getProducts,
+          take: ELEMENTS_PER_PAGE,
+          skip: INITIAL_SKIP,
+          size: response.data[1],
+          type: REQUEST_TYPE,
         });
+        setIsLoading(false);
       }
     }
 
@@ -202,12 +211,109 @@ const Dashboard: React.FC = () => {
   }, [searchWord, selectedCategory]);
 
   const handlePageClick = useCallback(
-    (e) => {
+    async (e) => {
+      setIsLoading(true);
       const { selected } = e;
-      const offset = selected * pagination.numberPerPage;
-      setPagination({ ...pagination, offset });
+      const skip = selected * ELEMENTS_PER_PAGE;
+      if (selectedCategory.name === 'null' && searchWord === '') {
+        const response = await api.get('/products', {
+          params: {
+            take: ELEMENTS_PER_PAGE,
+            skip,
+            type: REQUEST_TYPE,
+          },
+        });
+        const getProducts = response.data[0].map((product: Product) => {
+          const setQuantity = product;
+          setQuantity.quantity = 0;
+          return setQuantity;
+        });
+        setPagination({
+          products: getProducts,
+          take: ELEMENTS_PER_PAGE,
+          skip,
+          size: response.data[1],
+          type: REQUEST_TYPE,
+        });
+        setIsLoading(false);
+        return;
+      }
+      if (selectedCategory.name !== 'null' && searchWord !== '') {
+        const response = await api.get('/products/search', {
+          params: {
+            search_word: searchWord,
+            category_id: selectedCategory.id,
+            take: ELEMENTS_PER_PAGE,
+            skip,
+            type: REQUEST_TYPE,
+          },
+        });
+        const getProducts = response.data[0].map((product: Product) => {
+          const setQuantity = product;
+          setQuantity.quantity = 0;
+          return setQuantity;
+        });
+        setPagination({
+          products: getProducts,
+          take: ELEMENTS_PER_PAGE,
+          skip,
+          size: response.data[1],
+          type: REQUEST_TYPE,
+        });
+        setIsLoading(false);
+        return;
+      }
+      if (selectedCategory.name !== 'null') {
+        const response = await api.get('/products/search', {
+          params: {
+            category_id: selectedCategory.id,
+            take: ELEMENTS_PER_PAGE,
+            skip,
+            type: REQUEST_TYPE,
+          },
+        });
+
+        const getProducts = response.data[0].map((product: Product) => {
+          const setQuantity = product;
+          setQuantity.quantity = 0;
+          return setQuantity;
+        });
+        setPagination({
+          products: getProducts,
+          take: ELEMENTS_PER_PAGE,
+          skip,
+          size: response.data[1],
+          type: REQUEST_TYPE,
+        });
+        setIsLoading(false);
+        return;
+      }
+      if (searchWord !== '') {
+        const response = await api.get('/products/search', {
+          params: {
+            search_word: searchWord,
+            take: ELEMENTS_PER_PAGE,
+            skip,
+            type: REQUEST_TYPE,
+          },
+        });
+
+        const getProducts = response.data[0].map((product: Product) => {
+          const setQuantity = product;
+          setQuantity.quantity = 0;
+          return setQuantity;
+        });
+        setPagination({
+          products: getProducts,
+          take: ELEMENTS_PER_PAGE,
+          skip,
+          size: response.data[1],
+          type: REQUEST_TYPE,
+        });
+        setIsLoading(false);
+      }
     },
-    [pagination],
+    [searchWord, selectedCategory.name, selectedCategory.id],
   );
 
   const handleCategoryButtonClick = useCallback(
@@ -223,7 +329,7 @@ const Dashboard: React.FC = () => {
 
   const handleAddProductClick = useCallback(
     (id: string) => {
-      const newData = pagination.data.map((product) => {
+      const newData = pagination.products.map((product) => {
         if (product.id !== id) {
           return product;
         }
@@ -241,18 +347,17 @@ const Dashboard: React.FC = () => {
         changeQuantity.quantity += 1;
         return changeQuantity;
       });
-
       setPagination((oldState) => ({
         ...oldState,
-        data: newData,
+        products: newData,
       }));
     },
-    [pagination.data, addToast],
+    [pagination.products, addToast],
   );
 
   const handleRemoveProductClick = useCallback(
     (id: string) => {
-      const newData = pagination.data.map((product) => {
+      const newData = pagination.products.map((product) => {
         if (product.id !== id) {
           return product;
         }
@@ -266,10 +371,10 @@ const Dashboard: React.FC = () => {
 
       setPagination((oldState) => ({
         ...oldState,
-        data: newData,
+        products: newData,
       }));
     },
-    [pagination.data],
+    [pagination.products],
   );
 
   const handleAddToCartClick = useCallback(
@@ -316,19 +421,19 @@ const Dashboard: React.FC = () => {
           ) : null}
 
           <FoundProductsContainer>
-            {!pagination.currentData.length && pagination.data.length ? (
+            {isLoading ? (
               <Loading>
                 <FiLoader size={24} />
 
                 <p>Carregando</p>
               </Loading>
             ) : null}
-            {!pagination.currentData.length && !pagination.data.length ? (
+            {!pagination.products.length && !isLoading ? (
               <Loading>
                 <p>Nenhum Produto Encontrado</p>
               </Loading>
             ) : null}
-            {pagination.currentData.map((product) => (
+            {pagination.products.map((product) => (
               <ProductCard key={product.id}>
                 <div className="top-product">
                   <ProductImage>
@@ -373,12 +478,12 @@ const Dashboard: React.FC = () => {
               </ProductCard>
             ))}
           </FoundProductsContainer>
-          {pagination.currentData.length && pagination.pageCount > 0.5 ? (
+          {pagination.size / pagination.take > 1 ? (
             <ReactPaginate
               previousLabel="<"
               nextLabel=">"
               breakLabel="..."
-              pageCount={pagination.pageCount}
+              pageCount={pagination.size / pagination.take}
               marginPagesDisplayed={2}
               pageRangeDisplayed={2}
               onPageChange={handlePageClick}

@@ -1,14 +1,7 @@
 /* eslint-disable import/no-duplicates */
 /* eslint-disable import/newline-after-import */
 import React, { useState, useCallback, useEffect } from 'react';
-import {
-  startOfWeek,
-  endOfWeek,
-  startOfDay,
-  parseISO,
-  format,
-  subHours,
-} from 'date-fns';
+import { startOfWeek, endOfWeek, parseISO, format, subHours } from 'date-fns';
 import ReactPaginate from 'react-paginate';
 import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
@@ -35,47 +28,47 @@ import {
 import api from '../../services/api';
 registerLocale('ptBR', ptBR);
 
-interface IProduct {
-  id: string;
+interface IUser {
   name: string;
-  price: number;
-  stock: number;
-  category_id: string;
-  barcode: string;
-  image_url?: string;
-  product_image?: FormData;
-  hidden: boolean;
 }
 
-interface ISaleProducts {
+interface IProduct {
+  name: string;
+  image_url: string;
+}
+
+interface IOrderProducts {
   id: string;
+  price: number;
   quantity: number;
   product: IProduct;
 }
 
-interface ISale {
+interface IOrder {
   id: string;
-  client_name: string;
   total: number;
   discount: number;
   status: string;
   payment_method: string;
+  zip_code: string;
+  address: string;
+  city: string;
   created_at: string;
   updated_at: string;
-  sale_products: ISaleProducts[];
-  money_received: number;
-  change: number;
+  user: IUser;
+  order_products: IOrderProducts[];
+  newStatus: string;
 }
 
 interface Pagination {
-  data: ISale[];
+  data: IOrder[];
   offset: number;
   numberPerPage: number;
   pageCount: number;
-  currentData: ISale[];
+  currentData: IOrder[];
 }
 
-const Profit: React.FC = () => {
+const ProfitOrders: React.FC = () => {
   const [pagination, setPagination] = useState<Pagination>({
     data: [],
     offset: 0,
@@ -89,7 +82,6 @@ const Profit: React.FC = () => {
   const [selectedOption, setSelectedOption] = useState('');
   const [totalProfit, setTotalProfit] = useState(0);
   const [totalDiscount, setTotalDiscount] = useState(0);
-  const [totalPaid, setTotalPaid] = useState(0);
   const [totalMoney, setTotalMoney] = useState(0);
   const [totalCard, setTotalCard] = useState(0);
   const { addToast } = useToast();
@@ -136,9 +128,9 @@ const Profit: React.FC = () => {
       if (date && !Array.isArray(date)) {
         setDayDate(date);
         api
-          .get('/sales/finished-date', {
+          .get('/orders/finished-date', {
             params: {
-              sale_date: date,
+              order_date: date,
               time: 'day',
             },
           })
@@ -148,7 +140,7 @@ const Profit: React.FC = () => {
               data: response.data,
             }));
             const amountProfit = response.data.reduce(
-              (acc: number, sale: ISale) => {
+              (acc: number, sale: IOrder) => {
                 let t = acc;
                 t += Number(sale.total);
                 return t;
@@ -156,7 +148,7 @@ const Profit: React.FC = () => {
               0,
             );
             const amountDiscount = response.data.reduce(
-              (acc: number, sale: ISale) => {
+              (acc: number, sale: IOrder) => {
                 let t = acc;
                 t += Number(sale.discount);
                 return t;
@@ -164,7 +156,7 @@ const Profit: React.FC = () => {
               0,
             );
             const amountMoney = response.data.reduce(
-              (acc: number, sale: ISale) => {
+              (acc: number, sale: IOrder) => {
                 let t = acc;
                 if (sale.payment_method === 'DINHEIRO') t += 1;
                 return t;
@@ -172,17 +164,9 @@ const Profit: React.FC = () => {
               0,
             );
             const amountCard = response.data.reduce(
-              (acc: number, sale: ISale) => {
+              (acc: number, sale: IOrder) => {
                 let t = acc;
                 if (sale.payment_method === 'CARTAO') t += 1;
-                return t;
-              },
-              0,
-            );
-            const amountPaid = response.data.reduce(
-              (acc: number, sale: ISale) => {
-                let t = acc;
-                if (sale.status === 'PAGO') t += Number(sale.total);
                 return t;
               },
               0,
@@ -191,7 +175,6 @@ const Profit: React.FC = () => {
             setTotalDiscount(amountDiscount);
             setTotalMoney(amountMoney);
             setTotalCard(amountCard);
-            setTotalPaid(amountPaid);
           })
           .catch((err) => {
             addToast({
@@ -217,9 +200,9 @@ const Profit: React.FC = () => {
       if (date && !Array.isArray(date)) {
         setWeekDate(date);
         api
-          .get('/sales/finished-date', {
+          .get('/orders/finished-date', {
             params: {
-              sale_date: date,
+              order_date: date,
               time: 'week',
             },
           })
@@ -229,7 +212,7 @@ const Profit: React.FC = () => {
               data: response.data,
             }));
             const amountProfit = response.data.reduce(
-              (acc: number, sale: ISale) => {
+              (acc: number, sale: IOrder) => {
                 let t = acc;
                 t += Number(sale.total);
                 return t;
@@ -237,7 +220,7 @@ const Profit: React.FC = () => {
               0,
             );
             const amountDiscount = response.data.reduce(
-              (acc: number, sale: ISale) => {
+              (acc: number, sale: IOrder) => {
                 let t = acc;
                 t += Number(sale.discount);
                 return t;
@@ -245,7 +228,7 @@ const Profit: React.FC = () => {
               0,
             );
             const amountMoney = response.data.reduce(
-              (acc: number, sale: ISale) => {
+              (acc: number, sale: IOrder) => {
                 let t = acc;
                 if (sale.payment_method === 'DINHEIRO') t += 1;
                 return t;
@@ -253,17 +236,9 @@ const Profit: React.FC = () => {
               0,
             );
             const amountCard = response.data.reduce(
-              (acc: number, sale: ISale) => {
+              (acc: number, sale: IOrder) => {
                 let t = acc;
                 if (sale.payment_method === 'CARTAO') t += 1;
-                return t;
-              },
-              0,
-            );
-            const amountPaid = response.data.reduce(
-              (acc: number, sale: ISale) => {
-                let t = acc;
-                if (sale.status === 'PAGO') t += Number(sale.total);
                 return t;
               },
               0,
@@ -272,7 +247,6 @@ const Profit: React.FC = () => {
             setTotalDiscount(amountDiscount);
             setTotalMoney(amountMoney);
             setTotalCard(amountCard);
-            setTotalPaid(amountPaid);
           })
           .catch((err) => {
             addToast({
@@ -298,9 +272,9 @@ const Profit: React.FC = () => {
       if (date && !Array.isArray(date)) {
         setMonthDate(date);
         api
-          .get('/sales/finished-date', {
+          .get('/orders/finished-date', {
             params: {
-              sale_date: date,
+              order_date: date,
               time: 'month',
             },
           })
@@ -310,7 +284,7 @@ const Profit: React.FC = () => {
               data: response.data,
             }));
             const amountProfit = response.data.reduce(
-              (acc: number, sale: ISale) => {
+              (acc: number, sale: IOrder) => {
                 let t = acc;
                 t += Number(sale.total);
                 return t;
@@ -318,7 +292,7 @@ const Profit: React.FC = () => {
               0,
             );
             const amountDiscount = response.data.reduce(
-              (acc: number, sale: ISale) => {
+              (acc: number, sale: IOrder) => {
                 let t = acc;
                 t += Number(sale.discount);
                 return t;
@@ -326,7 +300,7 @@ const Profit: React.FC = () => {
               0,
             );
             const amountMoney = response.data.reduce(
-              (acc: number, sale: ISale) => {
+              (acc: number, sale: IOrder) => {
                 let t = acc;
                 if (sale.payment_method === 'DINHEIRO') t += 1;
                 return t;
@@ -334,17 +308,9 @@ const Profit: React.FC = () => {
               0,
             );
             const amountCard = response.data.reduce(
-              (acc: number, sale: ISale) => {
+              (acc: number, sale: IOrder) => {
                 let t = acc;
                 if (sale.payment_method === 'CARTAO') t += 1;
-                return t;
-              },
-              0,
-            );
-            const amountPaid = response.data.reduce(
-              (acc: number, sale: ISale) => {
-                let t = acc;
-                if (sale.status === 'PAGO') t += Number(sale.total);
                 return t;
               },
               0,
@@ -353,7 +319,6 @@ const Profit: React.FC = () => {
             setTotalDiscount(amountDiscount);
             setTotalMoney(amountMoney);
             setTotalCard(amountCard);
-            setTotalPaid(amountPaid);
           })
           .catch((err) => {
             addToast({
@@ -379,7 +344,7 @@ const Profit: React.FC = () => {
       <Header back="/admin" text="Voltar" />
       <Content>
         <Head>
-          <h2>Relatório de lucro</h2>
+          <h2>Relatório de lucro de pedidos</h2>
           <p>
             Selecione o perído do relatório. O período pode ser por dia, mês ou
             semana
@@ -446,27 +411,18 @@ const Profit: React.FC = () => {
                 Valor dos descontos: {formatter.format(totalDiscount)}
               </span>
               <span>Total ganho: {formatter.format(totalProfit)}</span>
-              <span>
-                Total recebido de vendas em aberto:{' '}
-                {formatter.format(totalPaid)}
-              </span>
-              <span>Qtd. de compras em dinheiro: {totalMoney}</span>
-              <span>Qtd. de compras com cartão: {totalCard}</span>
+              <span>Qtd. de pedidos em dinheiro: {totalMoney}</span>
+              <span>Qtd. de pedidos com cartão: {totalCard}</span>
             </Info>
 
             {pagination.currentData.map((s) => (
               <SalesContainer key={s.id}>
-                {s.status === 'PAGO' ? (
-                  <div>
-                    <span>Data da venda: {formatDate(s.created_at)}</span>
-                    <span>Data de pagamento: {formatDate(s.updated_at)}</span>
-                  </div>
-                ) : (
-                  <div>
-                    <span>Data da venda: {formatDate(s.created_at)}</span>
-                  </div>
-                )}
-                <div>Cliente: {s.client_name}</div>
+                <div>
+                  <span>Data do pedido: {formatDate(s.created_at)}</span>
+                  <span>Data de finalização: {formatDate(s.updated_at)}</span>
+                </div>
+
+                <div>Cliente: {s.user.name}</div>
                 <div>
                   <span>
                     Total:{' '}
@@ -481,27 +437,13 @@ const Profit: React.FC = () => {
                     {s.payment_method === 'DINHEIRO' ? 'Dinheiro' : 'Cartão'}
                   </span>
                 </div>
-                <div>
-                  {s.payment_method === 'DINHEIRO' ? (
-                    <>
-                      <span>
-                        Valor recebido:{' '}
-                        {formatter.format(Number(s.money_received))}
-                        {' | '} Troco:
-                        {formatter.format(Number(s.change))}
-                      </span>
-                    </>
-                  ) : null}
-                </div>
-                {s.sale_products.map((sp) => (
+                {s.order_products.map((sp) => (
                   <Product key={sp.id}>
                     <img src={sp.product.image_url} alt={sp.product.name} />
                     <span>{sp.product.name}</span>
                     <span>{sp.quantity}</span>
-                    <span>{formatter.format(sp.product.price)}</span>
-                    <span>
-                      {formatter.format(sp.product.price * sp.quantity)}
-                    </span>
+                    <span>{formatter.format(sp.price)}</span>
+                    <span>{formatter.format(sp.price * sp.quantity)}</span>
                   </Product>
                 ))}
               </SalesContainer>
@@ -526,4 +468,4 @@ const Profit: React.FC = () => {
   );
 };
 
-export default Profit;
+export default ProfitOrders;

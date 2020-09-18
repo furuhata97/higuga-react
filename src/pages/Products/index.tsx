@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
+import debounce from 'lodash.debounce';
 
 import { FiPlus, FiLoader } from 'react-icons/fi';
 import swal from 'sweetalert';
@@ -33,27 +34,30 @@ interface IProduct {
 }
 
 interface Pagination {
-  data: IProduct[];
-  offset: number;
-  numberPerPage: number;
-  pageCount: number;
-  currentData: IProduct[];
+  products: IProduct[];
+  size: number;
+  skip: number;
+  take: number;
+  type: string;
 }
 
+const ELEMENTS_PER_PAGE = 15;
+const INITIAL_SKIP = 0;
+const REQUEST_TYPE = 'private';
+
 const Products: React.FC = () => {
-  // const [products, setProducts] = useState<IProduct[]>([]);
+  const [searchWord, setSearchWord] = useState('');
   const [actionType, setActionType] = useState('');
   const [selectedProduct, setSelectedProduct] = useState<IProduct>(
     {} as IProduct,
   );
   const [pagination, setPagination] = useState<Pagination>({
-    data: [],
-    offset: 0,
-    numberPerPage: 20,
-    pageCount: 0,
-    currentData: [],
+    products: [],
+    take: 0,
+    skip: 0,
+    size: 0,
+    type: 'private',
   });
-  const [allProducts, setAllProducts] = useState<IProduct[]>([]);
   const { addToast } = useToast();
 
   const handleChangeStock = useCallback(
@@ -81,7 +85,7 @@ const Products: React.FC = () => {
               stock: Number(product.stock) + Number(changeStock),
             })
             .then((response) => {
-              const updatedProducs = pagination.data.map((p) => {
+              const updatedProducs = pagination.products.map((p) => {
                 if (p.id === response.data.id) {
                   return response.data;
                 }
@@ -89,7 +93,7 @@ const Products: React.FC = () => {
               });
               setPagination((prevState) => ({
                 ...prevState,
-                data: updatedProducs,
+                products: updatedProducs,
               }));
               swal('Estoque atualizado', {
                 icon: 'success',
@@ -103,17 +107,26 @@ const Products: React.FC = () => {
         }
       });
     },
-    [pagination.data],
+    [pagination.products],
   );
 
   useEffect(() => {
     api
-      .get('/products')
+      .get('/products', {
+        params: {
+          take: ELEMENTS_PER_PAGE,
+          skip: INITIAL_SKIP,
+          type: REQUEST_TYPE,
+        },
+      })
       .then((response) => {
-        setPagination((prevState) => ({
-          ...prevState,
-          data: response.data,
-        }));
+        setPagination({
+          products: response.data[0],
+          take: ELEMENTS_PER_PAGE,
+          skip: INITIAL_SKIP,
+          size: response.data[1],
+          type: REQUEST_TYPE,
+        });
       })
       .catch((err) => {
         addToast({
@@ -124,16 +137,55 @@ const Products: React.FC = () => {
       });
   }, [addToast]);
 
+  const updateSearch = (): void => {
+    if (searchWord) {
+      api
+        .get('/products/search', {
+          params: {
+            search_word: searchWord,
+            take: ELEMENTS_PER_PAGE,
+            skip: INITIAL_SKIP,
+            type: REQUEST_TYPE,
+          },
+        })
+        .then((response) => {
+          setPagination({
+            products: response.data[0],
+            take: ELEMENTS_PER_PAGE,
+            skip: INITIAL_SKIP,
+            size: response.data[1],
+            type: REQUEST_TYPE,
+          });
+        });
+      return;
+    }
+
+    api
+      .get('/products', {
+        params: {
+          take: ELEMENTS_PER_PAGE,
+          skip: INITIAL_SKIP,
+          type: REQUEST_TYPE,
+        },
+      })
+      .then((response) => {
+        setPagination({
+          products: response.data[0],
+          take: ELEMENTS_PER_PAGE,
+          skip: INITIAL_SKIP,
+          size: response.data[1],
+          type: REQUEST_TYPE,
+        });
+      });
+  };
+
+  const delayedSearch = useCallback(debounce(updateSearch, 500), [searchWord]);
+
   useEffect(() => {
-    setPagination((prevState) => ({
-      ...prevState,
-      pageCount: prevState.data.length / prevState.numberPerPage,
-      currentData: prevState.data.slice(
-        pagination.offset,
-        pagination.offset + pagination.numberPerPage,
-      ),
-    }));
-  }, [pagination.data, pagination.numberPerPage, pagination.offset]);
+    delayedSearch();
+
+    return delayedSearch.cancel;
+  }, [searchWord, delayedSearch]);
 
   const handleClickEdit = useCallback((product: IProduct) => {
     setActionType('edit');
@@ -144,112 +196,77 @@ const Products: React.FC = () => {
     setActionType('add');
   }, []);
 
-  const handleClickHidden = useCallback(
-    (id: string) => {
-      api
-        .patch('/products/hidden', {
-          id,
-        })
-        .then((response) => {
-          if (allProducts.length) {
-            setAllProducts(
-              allProducts.map((p) => {
-                if (p.id === id) {
-                  return response.data;
-                }
-                return p;
-              }),
-            );
-          }
-          setPagination((prevState) => ({
-            ...prevState,
-            data: prevState.data.map((p) => {
-              if (p.id === id) {
-                return response.data;
-              }
-              return p;
-            }),
-          }));
-        });
-    },
-    [allProducts],
-  );
+  const handleClickHidden = useCallback((id: string) => {
+    api
+      .patch('/products/hidden', {
+        id,
+      })
+      .then((response) => {
+        setPagination((prevState) => ({
+          ...prevState,
+          products: prevState.products.map((p) => {
+            if (p.id === id) {
+              return response.data;
+            }
+            return p;
+          }),
+        }));
+      });
+  }, []);
 
   const handlePageClick = useCallback(
-    (e) => {
+    async (e) => {
       const { selected } = e;
-      const offset = selected * pagination.numberPerPage;
-      setPagination({ ...pagination, offset });
-    },
-    [pagination],
-  );
-
-  const handleChangeInput = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      if (event.currentTarget.value) {
-        if (!allProducts.length) {
-          setAllProducts(pagination.data);
-          const filteredProducts = pagination.data.filter((suggestion) => {
-            let searchName = suggestion.name.toUpperCase();
-            searchName = searchName.replace(/[ÀÁÂÃÄÅ]/, 'A');
-            searchName = searchName.replace(/[ÈÉÊË]/, 'E');
-            searchName = searchName.replace(/[ÚÙÛ]/, 'U');
-            searchName = searchName.replace(/[ÕÓÒÔ]/, 'O');
-            searchName = searchName.replace(/['Ç']/, 'C');
-            return searchName
-              .toLowerCase()
-              .includes(event.currentTarget.value.toLowerCase());
-          });
-
-          setPagination({
-            data: filteredProducts,
-            offset: 0,
-            numberPerPage: 20,
-            pageCount: 0,
-            currentData: [],
-          });
-        } else {
-          const filteredProducts = allProducts.filter((suggestion) => {
-            let searchName = suggestion.name.toUpperCase();
-            searchName = searchName.replace(/[ÀÁÂÃÄÅ]/, 'A');
-            searchName = searchName.replace(/[ÈÉÊË]/, 'E');
-            searchName = searchName.replace(/[ÚÙÛ]/, 'U');
-            searchName = searchName.replace(/[ÕÓÒÔ]/, 'O');
-            searchName = searchName.replace(/['Ç']/, 'C');
-            return searchName
-              .toLowerCase()
-              .includes(event.currentTarget.value.toLowerCase());
-          });
-
-          setPagination({
-            data: filteredProducts,
-            offset: 0,
-            numberPerPage: 20,
-            pageCount: 0,
-            currentData: [],
-          });
-        }
-      } else {
-        setPagination({
-          data: allProducts,
-          offset: 0,
-          numberPerPage: 20,
-          pageCount: 0,
-          currentData: [],
+      const skip = selected * ELEMENTS_PER_PAGE;
+      if (searchWord) {
+        const response = await api.get('/products/search', {
+          params: {
+            search_word: searchWord,
+            take: ELEMENTS_PER_PAGE,
+            skip,
+            type: REQUEST_TYPE,
+          },
         });
-        setAllProducts([]);
+        setPagination({
+          products: response.data[0],
+          take: ELEMENTS_PER_PAGE,
+          skip,
+          size: response.data[1],
+          type: REQUEST_TYPE,
+        });
+        return;
       }
+      const response = await api.get('/products', {
+        params: {
+          take: ELEMENTS_PER_PAGE,
+          skip,
+          type: REQUEST_TYPE,
+        },
+      });
+      setPagination({
+        products: response.data[0],
+        take: ELEMENTS_PER_PAGE,
+        skip,
+        size: response.data[1],
+        type: REQUEST_TYPE,
+      });
     },
-    [allProducts, pagination.data],
+    [searchWord],
   );
+
+  const handleChangeInput = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ): void => {
+    setSearchWord(event.currentTarget.value);
+  };
 
   return (
     <>
       {actionType === '' ? (
         <ProductContainer>
           <p>Produtos</p>
-          <input type="text" onChange={handleChangeInput} />
-          {!pagination.data.length && !allProducts.length ? (
+          <input type="text" onChange={handleChangeInput} value={searchWord} />
+          {!pagination.products.length ? (
             <div>
               <Loading>
                 <FiLoader size={24} />
@@ -265,7 +282,7 @@ const Products: React.FC = () => {
                   <span>Adicionar novo produto</span>
                 </button>
               </NewProduct>
-              {pagination.currentData.map((p) => (
+              {pagination.products.map((p) => (
                 <ProductCard key={p.id}>
                   <img src={p.image_url} alt={`Foto do produto ${p.name}`} />
                   <span>{p.name}</span>
@@ -293,12 +310,12 @@ const Products: React.FC = () => {
               ))}
             </div>
           )}
-          {pagination.currentData.length && pagination.pageCount > 0.5 ? (
+          {pagination.size / pagination.take > 1 ? (
             <ReactPaginate
               previousLabel="<"
               nextLabel=">"
               breakLabel="..."
-              pageCount={pagination.pageCount}
+              pageCount={pagination.size / pagination.take}
               marginPagesDisplayed={2}
               pageRangeDisplayed={2}
               onPageChange={handlePageClick}
@@ -313,15 +330,10 @@ const Products: React.FC = () => {
           product={selectedProduct}
           setActionType={setActionType}
           setProducts={setPagination}
-          pagination={pagination}
         />
       ) : null}
       {actionType === 'add' ? (
-        <AddProduct
-          setActionType={setActionType}
-          setProducts={setPagination}
-          pagination={pagination}
-        />
+        <AddProduct setActionType={setActionType} setProducts={setPagination} />
       ) : null}
     </>
   );

@@ -19,6 +19,7 @@
     "date-fns": "^2.15.0",
     "formik": "^2.1.5",
     "jsonwebtoken": "^8.5.1",
+    "lodash.debounce": "^4.0.8",
     "moneysafe": "^2.2.1",
     "polished": "^3.6.5",
     "react": "^16.13.1",
@@ -59,6 +60,7 @@
   },
   "devDependencies": {
     "@types/jsonwebtoken": "^8.5.0",
+    "@types/lodash.debounce": "^4.0.6",
     "@types/react-burger-menu": "^2.6.1",
     "@types/react-datepicker": "^3.1.1",
     "@types/react-modal": "^3.10.6",

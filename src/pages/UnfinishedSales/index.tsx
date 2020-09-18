@@ -1,9 +1,8 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import { parseISO, format, subHours } from 'date-fns';
 
-import { FiLoader } from 'react-icons/fi';
 import swal from 'sweetalert';
 import ReactPaginate from 'react-paginate';
 import FormControl from '@material-ui/core/FormControl';
@@ -366,64 +365,62 @@ const UnfinishedSales: React.FC = () => {
   );
 
   return (
-    <>
-      <SaleContainer>
-        <p>Vendas em aberto</p>
-        <input
-          type="text"
-          onChange={handleChangeInput}
-          placeholder="Nome do cliente"
+    <SaleContainer>
+      <p>Vendas em aberto</p>
+      <input
+        type="text"
+        onChange={handleChangeInput}
+        placeholder="Nome do cliente"
+      />
+      {isEmpty ? (
+        <div>
+          <Loading>
+            <p>Nenhuma venda em aberto</p>
+          </Loading>
+        </div>
+      ) : (
+        <div>
+          {pagination.currentData.map((p) => (
+            <SaleCard key={p.id}>
+              <span>Cliente: {p.client_name}</span>
+              <span>Data da compra: {formatDate(p.created_at)}</span>
+              <span>Total: {formatter.format(p.total)}</span>
+              <span>Desconto: {formatter.format(p.discount)}</span>
+              <span>
+                <strong>Produtos</strong>
+              </span>
+              {p.sale_products.map((sp) => (
+                <div key={sp.id}>
+                  <img src={sp.product.image_url} alt={sp.product.name} />
+                  <span>{sp.product.name}</span>
+                  <span>{sp.quantity}</span>
+                  <span>{formatter.format(sp.product.price)}</span>
+                  <span>
+                    {formatter.format(sp.product.price * sp.quantity)}
+                  </span>
+                </div>
+              ))}
+              <button type="button" onClick={() => handlePaymentClick(p)}>
+                Realizar pagamento
+              </button>
+            </SaleCard>
+          ))}
+        </div>
+      )}
+      {pagination.currentData.length && pagination.pageCount > 0.5 ? (
+        <ReactPaginate
+          previousLabel="<"
+          nextLabel=">"
+          breakLabel="..."
+          pageCount={pagination.pageCount}
+          marginPagesDisplayed={2}
+          pageRangeDisplayed={2}
+          onPageChange={handlePageClick}
+          containerClassName="pagination"
+          activeClassName="active"
         />
-        {isEmpty ? (
-          <div>
-            <Loading>
-              <p>Nenhuma venda em aberto</p>
-            </Loading>
-          </div>
-        ) : (
-          <div>
-            {pagination.currentData.map((p) => (
-              <SaleCard key={p.id}>
-                <span>Cliente: {p.client_name}</span>
-                <span>Data da compra: {formatDate(p.created_at)}</span>
-                <span>Total: {formatter.format(p.total)}</span>
-                <span>Desconto: {formatter.format(p.discount)}</span>
-                <span>
-                  <strong>Produtos</strong>
-                </span>
-                {p.sale_products.map((sp) => (
-                  <div key={sp.id}>
-                    <img src={sp.product.image_url} alt={sp.product.name} />
-                    <span>{sp.product.name}</span>
-                    <span>{sp.quantity}</span>
-                    <span>{formatter.format(sp.product.price)}</span>
-                    <span>
-                      {formatter.format(sp.product.price * sp.quantity)}
-                    </span>
-                  </div>
-                ))}
-                <button type="button" onClick={() => handlePaymentClick(p)}>
-                  Realizar pagamento
-                </button>
-              </SaleCard>
-            ))}
-          </div>
-        )}
-        {pagination.currentData.length && pagination.pageCount > 0.5 ? (
-          <ReactPaginate
-            previousLabel="<"
-            nextLabel=">"
-            breakLabel="..."
-            pageCount={pagination.pageCount}
-            marginPagesDisplayed={2}
-            pageRangeDisplayed={2}
-            onPageChange={handlePageClick}
-            containerClassName="pagination"
-            activeClassName="active"
-          />
-        ) : null}
-      </SaleContainer>
-    </>
+      ) : null}
+    </SaleContainer>
   );
 };
 

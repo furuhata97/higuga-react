@@ -45,25 +45,27 @@ interface IEditProductForm {
 }
 
 interface Pagination {
-  data: IProduct[];
-  offset: number;
-  numberPerPage: number;
-  pageCount: number;
-  currentData: IProduct[];
+  products: IProduct[];
+  size: number;
+  skip: number;
+  take: number;
+  type: string;
 }
+
+const ELEMENTS_PER_PAGE = 15;
+const INITIAL_SKIP = 0;
+const REQUEST_TYPE = 'private';
 
 interface IEditProductProps {
   product: IProduct;
   setActionType(action: string): void;
   setProducts(pagination: Pagination): void;
-  pagination: Pagination;
 }
 
 const EditProduct: React.FC<IEditProductProps> = ({
   product,
   setActionType,
   setProducts,
-  pagination,
 }) => {
   const { addToast } = useToast();
   const [categories, setCategories] = useState<ICategory[]>([]);
@@ -73,10 +75,13 @@ const EditProduct: React.FC<IEditProductProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
+    let mounted = true;
     api
       .get('/categories')
       .then((response) => {
-        setCategories(response.data);
+        if (mounted) {
+          setCategories(response.data);
+        }
       })
       .catch((err) => {
         addToast({
@@ -84,6 +89,10 @@ const EditProduct: React.FC<IEditProductProps> = ({
           title: 'Erro ao carregar categorias',
         });
       });
+
+    return function cleanup() {
+      mounted = false;
+    };
   }, [addToast]);
 
   const handleChangeSelect = useCallback((e) => {
@@ -117,18 +126,27 @@ const EditProduct: React.FC<IEditProductProps> = ({
         fileFormData.append('stock', String(data.stock));
 
         await api.put('/products', fileFormData);
-        const response = await api.get('/products');
+        const response = await api.get('/products', {
+          params: {
+            take: ELEMENTS_PER_PAGE,
+            skip: INITIAL_SKIP,
+            type: REQUEST_TYPE,
+          },
+        });
         setProducts({
-          ...pagination,
-          data: response.data,
+          products: response.data[0],
+          take: ELEMENTS_PER_PAGE,
+          skip: INITIAL_SKIP,
+          size: response.data[1],
+          type: REQUEST_TYPE,
         });
         resetForm({});
         addToast({
           type: 'success',
           title: 'Produto atualizado',
         });
-        setActionType('');
         setIsSubmitting(false);
+        setActionType('');
       } catch (err) {
         setIsSubmitting(false);
         const f = fileFormData;
@@ -152,7 +170,6 @@ const EditProduct: React.FC<IEditProductProps> = ({
       product.id,
       setActionType,
       setProducts,
-      pagination,
     ],
   );
 
@@ -223,6 +240,7 @@ const EditProduct: React.FC<IEditProductProps> = ({
                       onBlur={handleBlur}
                       helperText={touched.barcode ? errors.barcode : ''}
                       error={touched.barcode && Boolean(errors.barcode)}
+                      inputProps={{ maxLength: 13 }}
                       margin="dense"
                       variant="outlined"
                       fullWidth

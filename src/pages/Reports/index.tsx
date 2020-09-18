@@ -8,19 +8,24 @@ import { Container } from './styles';
 const Reports: React.FC = () => {
   const history = useHistory();
 
-  const handleProfitClick = useCallback(() => {
-    history.push('/profit');
+  const handleProfitSalesClick = useCallback(() => {
+    history.push('/profit-sales');
+  }, [history]);
+
+  const handleProfitOrdersClick = useCallback(() => {
+    history.push('/profit-orders');
   }, [history]);
 
   return (
     <Container>
       <h3>Relatórios</h3>
       <p>Selecione o tipo de relatório que quer visualizar</p>
-      <button type="button" onClick={handleProfitClick}>
-        Relatório de Lucro
+      <button type="button" onClick={handleProfitSalesClick}>
+        Relatório de Vendas
       </button>
-      <button type="button">Relatório de Vendas</button>
-      <button type="button">Relatório de Pedidos</button>
+      <button type="button" onClick={handleProfitOrdersClick}>
+        Relatório de Pedidos
+      </button>
       <button type="button">Vendas em aberto</button>
     </Container>
   );

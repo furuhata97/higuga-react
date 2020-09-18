@@ -56,6 +56,13 @@ const Orders: React.FC = () => {
     return formattedDate;
   }
 
+  function printStatus(status: string): string {
+    if (status === 'EM PROCESSAMENTO') return 'Em Processamento';
+    if (status === 'EM TRANSITO') return 'Em trânsito';
+    if (status === 'FINALIZADO') return 'Finalizado';
+    return 'Cancelado';
+  }
+
   return (
     <>
       <Container>
@@ -88,7 +95,7 @@ const Orders: React.FC = () => {
                 ))}
                 <OrderFooter>
                   <em>
-                    {o.address} - {o.city} CEP: {o.zip_code}
+                    {o.address} - {o.city}, CEP: {o.zip_code}
                   </em>
                   <br />
                   <strong>
@@ -99,7 +106,7 @@ const Orders: React.FC = () => {
                     Método de pagamento:{' '}
                     {o.payment_method === 'CARTAO' ? 'Cartão' : 'Dinheiro'}
                   </strong>
-                  <strong>Status: {o.status}</strong>
+                  <strong>Status: {printStatus(o.status)}</strong>
                 </OrderFooter>
               </OrderContent>
             ))}
