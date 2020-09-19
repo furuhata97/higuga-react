@@ -137,7 +137,6 @@ const AddProduct: React.FC<IAddProductProps> = ({
           type: 'success',
           title: 'Produto atualizado',
         });
-        setActionType('');
         setIsSubmitting(false);
         setActionType('');
       } catch (err) {

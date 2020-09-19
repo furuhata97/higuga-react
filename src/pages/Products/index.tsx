@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import debounce from 'lodash.debounce';
 
-import { FiPlus } from 'react-icons/fi';
+import { FiLoader, FiPlus } from 'react-icons/fi';
 import swal from 'sweetalert';
 import ReactPaginate from 'react-paginate';
 
@@ -12,6 +12,7 @@ import {
   NewProduct,
   ProductCard,
   ProductButtons,
+  Loading,
 } from './styles';
 
 import api from '../../services/api';
@@ -45,6 +46,7 @@ const INITIAL_SKIP = 0;
 const REQUEST_TYPE = 'private';
 
 const Products: React.FC = () => {
+  const [loading, setLoading] = useState(true);
   const [searchWord, setSearchWord] = useState('');
   const [actionType, setActionType] = useState('');
   const [selectedProduct, setSelectedProduct] = useState<IProduct>(
@@ -134,9 +136,11 @@ const Products: React.FC = () => {
           type: 'error',
         });
       });
+    setLoading(false);
   }, [addToast]);
 
   const updateSearch = (): void => {
+    setLoading(true);
     if (searchWord) {
       api
         .get('/products/search', {
@@ -155,6 +159,7 @@ const Products: React.FC = () => {
             size: response.data[1],
             type: REQUEST_TYPE,
           });
+          setLoading(false);
         });
       return;
     }
@@ -176,6 +181,7 @@ const Products: React.FC = () => {
           type: REQUEST_TYPE,
         });
       });
+    setLoading(false);
   };
 
   const delayedSearch = useCallback(debounce(updateSearch, 500), [searchWord]);
@@ -265,37 +271,59 @@ const Products: React.FC = () => {
         <ProductContainer>
           <p>Produtos</p>
           <input type="text" onChange={handleChangeInput} value={searchWord} />
-          <div>
-            <NewProduct>
-              <button type="button" onClick={handleClickAdd}>
-                <FiPlus size={32} />
-                <span>Adicionar novo produto</span>
-              </button>
-            </NewProduct>
-            {pagination.products.map((p) => (
-              <ProductCard key={p.id}>
-                <img src={p.image_url} alt={`Foto do produto ${p.name}`} />
-                <span>{p.name}</span>
-                <span>{formatter.format(p.price)}</span>
-                <span>Estoque: {p.stock}</span>
-                <ProductButtons>
-                  <button type="button" onClick={() => handleChangeStock(p)}>
-                    Adicionar estoque
-                  </button>
-                  <button type="button" onClick={() => handleClickEdit(p)}>
-                    Editar
-                  </button>
-                  <button type="button" onClick={() => handleClickHidden(p.id)}>
-                    {p.hidden ? (
-                      <span>Deixar visível</span>
-                    ) : (
-                      <span>Ocultar</span>
-                    )}
-                  </button>
-                </ProductButtons>
-              </ProductCard>
-            ))}
-          </div>
+          {loading ? (
+            <Loading>
+              <FiLoader size={24} />
+
+              <p>Carregando</p>
+            </Loading>
+          ) : null}
+          {!loading && !pagination.products.length ? (
+            <div>
+              <NewProduct>
+                <button type="button" onClick={handleClickAdd}>
+                  <FiPlus size={32} />
+                  <span>Adicionar novo produto</span>
+                </button>
+              </NewProduct>
+            </div>
+          ) : null}
+          {!loading && pagination.products.length ? (
+            <div>
+              <NewProduct>
+                <button type="button" onClick={handleClickAdd}>
+                  <FiPlus size={32} />
+                  <span>Adicionar novo produto</span>
+                </button>
+              </NewProduct>
+              {pagination.products.map((p) => (
+                <ProductCard key={p.id}>
+                  <img src={p.image_url} alt={`Foto do produto ${p.name}`} />
+                  <span>{p.name}</span>
+                  <span>{formatter.format(p.price)}</span>
+                  <span>Estoque: {p.stock}</span>
+                  <ProductButtons>
+                    <button type="button" onClick={() => handleChangeStock(p)}>
+                      Adicionar estoque
+                    </button>
+                    <button type="button" onClick={() => handleClickEdit(p)}>
+                      Editar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleClickHidden(p.id)}
+                    >
+                      {p.hidden ? (
+                        <span>Deixar visível</span>
+                      ) : (
+                        <span>Ocultar</span>
+                      )}
+                    </button>
+                  </ProductButtons>
+                </ProductCard>
+              ))}
+            </div>
+          ) : null}
           {pagination.size / pagination.take > 1 ? (
             <ReactPaginate
               previousLabel="<"

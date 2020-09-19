@@ -24,23 +24,23 @@ interface IAddCategoryForm {
 }
 
 interface Pagination {
-  data: ICategory[];
-  offset: number;
-  numberPerPage: number;
-  pageCount: number;
-  currentData: ICategory[];
+  categories: ICategory[];
+  size: number;
+  skip: number;
+  take: number;
 }
+
+const ELEMENTS_PER_PAGE = 15;
+const INITIAL_SKIP = 0;
 
 interface IAddCategoryProps {
   setActionType(action: string): void;
   setCategories(pagination: Pagination): void;
-  pagination: Pagination;
 }
 
 const AddCategory: React.FC<IAddCategoryProps> = ({
   setActionType,
   setCategories,
-  pagination,
 }) => {
   const { addToast } = useToast();
 
@@ -53,10 +53,17 @@ const AddCategory: React.FC<IAddCategoryProps> = ({
         await api.post('/categories', {
           name: data.name,
         });
-        const response = await api.get('/categories');
+        const response = await api.get('/categories/search', {
+          params: {
+            take: ELEMENTS_PER_PAGE,
+            skip: INITIAL_SKIP,
+          },
+        });
         setCategories({
-          ...pagination,
-          data: response.data,
+          categories: response.data[0],
+          take: ELEMENTS_PER_PAGE,
+          skip: INITIAL_SKIP,
+          size: response.data[1],
         });
         resetForm({});
         addToast({
@@ -72,7 +79,7 @@ const AddCategory: React.FC<IAddCategoryProps> = ({
         });
       }
     },
-    [addToast, setActionType, setCategories, pagination],
+    [addToast, setActionType, setCategories],
   );
 
   return (

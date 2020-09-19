@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
+import debounce from 'lodash.debounce';
 
-import { FiPlus } from 'react-icons/fi';
+import { FiLoader, FiPlus } from 'react-icons/fi';
 import ReactPaginate from 'react-paginate';
 
 import {
@@ -8,6 +9,7 @@ import {
   NewCategory,
   CategoryCard,
   CategoryButtons,
+  Loading,
 } from './styles';
 
 import api from '../../services/api';
@@ -22,36 +24,46 @@ interface ICategory {
 }
 
 interface Pagination {
-  data: ICategory[];
-  offset: number;
-  numberPerPage: number;
-  pageCount: number;
-  currentData: ICategory[];
+  categories: ICategory[];
+  size: number;
+  skip: number;
+  take: number;
 }
 
+const ELEMENTS_PER_PAGE = 15;
+const INITIAL_SKIP = 0;
+
 const Categories: React.FC = () => {
+  const [loading, setLoading] = useState(true);
+  const [searchWord, setSearchWord] = useState('');
   const [actionType, setActionType] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<ICategory>(
     {} as ICategory,
   );
   const [pagination, setPagination] = useState<Pagination>({
-    data: [],
-    offset: 0,
-    numberPerPage: 20,
-    pageCount: 0,
-    currentData: [],
+    categories: [],
+    take: 0,
+    skip: 0,
+    size: 0,
   });
-  const [allCategories, setAllCategories] = useState<ICategory[]>([]);
+
   const { addToast } = useToast();
 
   useEffect(() => {
     api
-      .get('/categories')
+      .get('/categories/search', {
+        params: {
+          take: ELEMENTS_PER_PAGE,
+          skip: INITIAL_SKIP,
+        },
+      })
       .then((response) => {
-        setPagination((prevState) => ({
-          ...prevState,
-          data: response.data,
-        }));
+        setPagination({
+          categories: response.data[0],
+          take: ELEMENTS_PER_PAGE,
+          skip: INITIAL_SKIP,
+          size: response.data[1],
+        });
       })
       .catch((err) => {
         addToast({
@@ -60,18 +72,57 @@ const Categories: React.FC = () => {
           type: 'error',
         });
       });
+    setLoading(false);
   }, [addToast]);
 
+  const updateSearch = (): void => {
+    setLoading(true);
+    if (searchWord) {
+      api
+        .get('/categories/search', {
+          params: {
+            search: searchWord,
+            take: ELEMENTS_PER_PAGE,
+            skip: INITIAL_SKIP,
+          },
+        })
+        .then((response) => {
+          setPagination({
+            categories: response.data[0],
+            take: ELEMENTS_PER_PAGE,
+            skip: INITIAL_SKIP,
+            size: response.data[1],
+          });
+        });
+      setLoading(false);
+      return;
+    }
+
+    api
+      .get('/categories/search', {
+        params: {
+          take: ELEMENTS_PER_PAGE,
+          skip: INITIAL_SKIP,
+        },
+      })
+      .then((response) => {
+        setPagination({
+          categories: response.data[0],
+          take: ELEMENTS_PER_PAGE,
+          skip: INITIAL_SKIP,
+          size: response.data[1],
+        });
+      });
+    setLoading(false);
+  };
+
+  const delayedSearch = useCallback(debounce(updateSearch, 500), [searchWord]);
+
   useEffect(() => {
-    setPagination((prevState) => ({
-      ...prevState,
-      pageCount: prevState.data.length / prevState.numberPerPage,
-      currentData: prevState.data.slice(
-        pagination.offset,
-        pagination.offset + pagination.numberPerPage,
-      ),
-    }));
-  }, [pagination.data, pagination.numberPerPage, pagination.offset]);
+    delayedSearch();
+
+    return delayedSearch.cancel;
+  }, [searchWord, delayedSearch]);
 
   const handleClickEdit = useCallback((category: ICategory) => {
     setActionType('edit');
@@ -83,103 +134,96 @@ const Categories: React.FC = () => {
   }, []);
 
   const handlePageClick = useCallback(
-    (e) => {
+    async (e) => {
       const { selected } = e;
-      const offset = selected * pagination.numberPerPage;
-      setPagination({ ...pagination, offset });
-    },
-    [pagination],
-  );
-
-  const handleChangeInput = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      if (event.currentTarget.value) {
-        if (!allCategories.length) {
-          setAllCategories(pagination.data);
-          const filteredCategories = pagination.data.filter((suggestion) => {
-            let searchName = suggestion.name.toUpperCase();
-            searchName = searchName.replace(/[ÀÁÂÃÄÅ]/, 'A');
-            searchName = searchName.replace(/[ÈÉÊË]/, 'E');
-            searchName = searchName.replace(/[ÚÙÛ]/, 'U');
-            searchName = searchName.replace(/[ÕÓÒÔ]/, 'O');
-            searchName = searchName.replace(/['Ç']/, 'C');
-            return searchName
-              .toLowerCase()
-              .includes(event.currentTarget.value.toLowerCase());
-          });
-
-          setPagination({
-            data: filteredCategories,
-            offset: 0,
-            numberPerPage: 20,
-            pageCount: 0,
-            currentData: [],
-          });
-        } else {
-          const filteredCategories = allCategories.filter((suggestion) => {
-            let searchName = suggestion.name.toUpperCase();
-            searchName = searchName.replace(/[ÀÁÂÃÄÅ]/, 'A');
-            searchName = searchName.replace(/[ÈÉÊË]/, 'E');
-            searchName = searchName.replace(/[ÚÙÛ]/, 'U');
-            searchName = searchName.replace(/[ÕÓÒÔ]/, 'O');
-            searchName = searchName.replace(/['Ç']/, 'C');
-            return searchName
-              .toLowerCase()
-              .includes(event.currentTarget.value.toLowerCase());
-          });
-
-          setPagination({
-            data: filteredCategories,
-            offset: 0,
-            numberPerPage: 20,
-            pageCount: 0,
-            currentData: [],
-          });
-        }
-      } else {
-        setPagination({
-          data: allCategories,
-          offset: 0,
-          numberPerPage: 20,
-          pageCount: 0,
-          currentData: [],
+      const skip = selected * ELEMENTS_PER_PAGE;
+      if (searchWord) {
+        const response = await api.get('/categories/search', {
+          params: {
+            search: searchWord,
+            take: ELEMENTS_PER_PAGE,
+            skip,
+          },
         });
-        setAllCategories([]);
+        setPagination({
+          categories: response.data[0],
+          take: ELEMENTS_PER_PAGE,
+          skip,
+          size: response.data[1],
+        });
+        return;
       }
+      const response = await api.get('/categories/search', {
+        params: {
+          take: ELEMENTS_PER_PAGE,
+          skip,
+        },
+      });
+      setPagination({
+        categories: response.data[0],
+        take: ELEMENTS_PER_PAGE,
+        skip,
+        size: response.data[1],
+      });
     },
-    [allCategories, pagination.data],
+    [searchWord],
   );
+
+  const handleChangeInput = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ): void => {
+    setSearchWord(event.currentTarget.value);
+  };
 
   return (
     <>
       {actionType === '' ? (
         <CategoryContainer>
           <p>Categorias</p>
-          <input type="text" onChange={handleChangeInput} />
-          <div>
-            <NewCategory>
-              <button type="button" onClick={handleClickAdd}>
-                <FiPlus size={32} />
-                <span>Adicionar nova categoria</span>
-              </button>
-            </NewCategory>
-            {pagination.currentData.map((p) => (
-              <CategoryCard key={p.id}>
-                <span>{p.name}</span>
-                <CategoryButtons>
-                  <button type="button" onClick={() => handleClickEdit(p)}>
-                    Editar
-                  </button>
-                </CategoryButtons>
-              </CategoryCard>
-            ))}
-          </div>
-          {pagination.currentData.length && pagination.pageCount > 0.5 ? (
+          <input type="text" onChange={handleChangeInput} value={searchWord} />
+          {loading ? (
+            <Loading>
+              <FiLoader size={24} />
+
+              <p>Carregando</p>
+            </Loading>
+          ) : null}
+          {!loading && !pagination.categories.length ? (
+            <div>
+              <NewCategory>
+                <button type="button" onClick={handleClickAdd}>
+                  <FiPlus size={32} />
+                  <span>Adicionar nova categoria</span>
+                </button>
+              </NewCategory>
+            </div>
+          ) : null}
+          {!loading && pagination.categories.length ? (
+            <div>
+              <NewCategory>
+                <button type="button" onClick={handleClickAdd}>
+                  <FiPlus size={32} />
+                  <span>Adicionar nova categoria</span>
+                </button>
+              </NewCategory>
+              {pagination.categories.map((p) => (
+                <CategoryCard key={p.id}>
+                  <span>{p.name}</span>
+                  <CategoryButtons>
+                    <button type="button" onClick={() => handleClickEdit(p)}>
+                      Editar
+                    </button>
+                  </CategoryButtons>
+                </CategoryCard>
+              ))}
+            </div>
+          ) : null}
+          {pagination.size / pagination.take > 1 ? (
             <ReactPaginate
               previousLabel="<"
               nextLabel=">"
               breakLabel="..."
-              pageCount={pagination.pageCount}
+              pageCount={pagination.size / pagination.take}
               marginPagesDisplayed={2}
               pageRangeDisplayed={2}
               onPageChange={handlePageClick}
@@ -194,14 +238,12 @@ const Categories: React.FC = () => {
           category={selectedCategory}
           setActionType={setActionType}
           setCategories={setPagination}
-          pagination={pagination}
         />
       ) : null}
       {actionType === 'add' ? (
         <AddCategory
           setActionType={setActionType}
           setCategories={setPagination}
-          pagination={pagination}
         />
       ) : null}
     </>

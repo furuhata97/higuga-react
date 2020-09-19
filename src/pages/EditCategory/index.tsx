@@ -24,25 +24,25 @@ interface IEditCategoryForm {
 }
 
 interface Pagination {
-  data: ICategory[];
-  offset: number;
-  numberPerPage: number;
-  pageCount: number;
-  currentData: ICategory[];
+  categories: ICategory[];
+  size: number;
+  skip: number;
+  take: number;
 }
+
+const ELEMENTS_PER_PAGE = 15;
+const INITIAL_SKIP = 0;
 
 interface IEditCategoryProps {
   category: ICategory;
   setActionType(action: string): void;
   setCategories(pagination: Pagination): void;
-  pagination: Pagination;
 }
 
 const EditCateogry: React.FC<IEditCategoryProps> = ({
   category,
   setActionType,
   setCategories,
-  pagination,
 }) => {
   const { addToast } = useToast();
 
@@ -56,10 +56,17 @@ const EditCateogry: React.FC<IEditCategoryProps> = ({
           id: category.id,
           name: data.name,
         });
-        const response = await api.get('/categories');
+        const response = await api.get('/categories/search', {
+          params: {
+            take: ELEMENTS_PER_PAGE,
+            skip: INITIAL_SKIP,
+          },
+        });
         setCategories({
-          ...pagination,
-          data: response.data,
+          categories: response.data[0],
+          take: ELEMENTS_PER_PAGE,
+          skip: INITIAL_SKIP,
+          size: response.data[1],
         });
         resetForm({});
         addToast({
@@ -75,7 +82,7 @@ const EditCateogry: React.FC<IEditCategoryProps> = ({
         });
       }
     },
-    [addToast, category.id, setActionType, setCategories, pagination],
+    [addToast, category.id, setActionType, setCategories],
   );
 
   return (
