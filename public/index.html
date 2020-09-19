@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en" style="height: 100%;">
+<html lang="en" class="htmlContainer">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#AA4300" />
-    <title>React App</title>
+    <title>Higuga</title>
 
     <link
       href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@200;300;400;500&display=swap"
@@ -18,8 +18,25 @@
       rel="stylesheet"
       href="https://fonts.googleapis.com/icon?family=Material+Icons"
     />
+
+    <style>
+      .htmlContainer {
+        height: 100%;
+        @media only screen and (max-device-width: 736px) {
+          height: auto;
+        }
+      }
+
+      .bodyContainer {
+        height: 100%;
+        @media only screen and (max-device-width: 736px) {
+          height: 100vh;
+          width: 100vw;
+        }
+      }
+    </style>
   </head>
-  <body style="height: 100%;">
+  <body class="bodyContainer">
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root" style="height: 100%;"></div>
     <!--

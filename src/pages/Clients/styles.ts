@@ -3,6 +3,32 @@ import { lighten } from 'polished';
 
 export const Container = styled.div`
   color: #333;
+
+  .pagination {
+    margin: 1rem auto;
+    list-style: none;
+    display: flex;
+    justify-content: space-evenly;
+    width: 50%;
+
+    @media (max-width: 450px) {
+      width: 100%;
+      font-size: 11px;
+    }
+  }
+  .active {
+    border: 1px solid black;
+    border-radius: 10%;
+    padding: 0 8px;
+    outline: none;
+    background: rgba(170, 67, 0, 0.84);
+    color: #fff5ea;
+  }
+
+  ul {
+    cursor: pointer;
+    color: black;
+  }
 `;
 
 export const ClientCard = styled.div`

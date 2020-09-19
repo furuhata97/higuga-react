@@ -157,7 +157,7 @@ const Clients: React.FC = () => {
         <div>Admin</div>
         <div />
       </CardHeader>
-      {pagination.data.map((client) => {
+      {pagination.currentData.map((client) => {
         if (client.id !== user?.id) {
           return (
             <ClientCard key={client.id}>
@@ -181,7 +181,7 @@ const Clients: React.FC = () => {
         }
         return null;
       })}
-      {pagination.currentData.length && pagination.pageCount > 0.5 ? (
+      {pagination.currentData.length && pagination.data.length > 15 ? (
         <ReactPaginate
           previousLabel="<"
           nextLabel=">"

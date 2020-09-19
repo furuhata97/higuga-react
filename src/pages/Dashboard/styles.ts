@@ -10,9 +10,13 @@ export const Container = styled.div`
   display: flex;
   flex-direction: row;
   flex: 1;
-
   @media (max-width: 450px) {
     flex-direction: column;
+  }
+
+  @media only screen and (max-device-width: 736px) {
+    height: 100vh;
+    width: 100vw;
   }
 `;
 
@@ -99,10 +103,9 @@ export const CategoryTitle = styled.div`
 `;
 
 export const ProductsContainer = styled.div`
-  flex: 1;
   display: flex;
   flex-direction: column;
-  height: 100%;
+  flex: 1;
 
   .pagination {
     margin: 1rem auto;
