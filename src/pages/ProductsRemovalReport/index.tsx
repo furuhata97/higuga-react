@@ -1,7 +1,7 @@
 /* eslint-disable import/no-duplicates */
 /* eslint-disable import/newline-after-import */
 import React, { useState, useCallback, useEffect } from 'react';
-import { startOfWeek, endOfWeek, parseISO, format, subHours } from 'date-fns';
+import { startOfWeek, endOfWeek, parseISO, format } from 'date-fns';
 import ReactPaginate from 'react-paginate';
 import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
