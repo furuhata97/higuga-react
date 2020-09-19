@@ -157,6 +157,7 @@ const Clients: React.FC = () => {
         <div>Admin</div>
         <div />
       </CardHeader>
+      {!pagination.data.length ? <span>Nenhum cliente encontrado</span> : null}
       {pagination.currentData.map((client) => {
         if (client.id !== user?.id) {
           return (

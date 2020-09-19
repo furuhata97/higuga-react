@@ -20,6 +20,7 @@ import SelectAddress from '../pages/SelectAddress';
 import AdminArea from '../pages/AdminArea';
 import ProfitSales from '../pages/ProfitSales';
 import ProfitOrders from '../pages/ProfitOrders';
+import ProductsRemovalReport from '../pages/ProductsRemovalReport';
 
 const Routes: React.FC = () => (
   <Switch>
@@ -41,6 +42,12 @@ const Routes: React.FC = () => (
     <Route path="/admin" isPrivate isAdmin component={AdminArea} />
     <Route path="/profit-sales" isPrivate isAdmin component={ProfitSales} />
     <Route path="/profit-orders" isPrivate isAdmin component={ProfitOrders} />
+    <Route
+      path="/products-removal"
+      isPrivate
+      isAdmin
+      component={ProductsRemovalReport}
+    />
   </Switch>
 );
 

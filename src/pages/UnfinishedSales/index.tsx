@@ -2,6 +2,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import { parseISO, format, subHours } from 'date-fns';
+import debounce from 'lodash.debounce';
 
 import swal from 'sweetalert';
 import ReactPaginate from 'react-paginate';
@@ -45,12 +46,14 @@ interface ISale {
 }
 
 interface Pagination {
-  data: ISale[];
-  offset: number;
-  numberPerPage: number;
-  pageCount: number;
-  currentData: ISale[];
+  sales: ISale[];
+  size: number;
+  skip: number;
+  take: number;
 }
+
+const ELEMENTS_PER_PAGE = 1;
+const INITIAL_SKIP = 0;
 
 interface SelectPaymentProps {
   sale: ISale;
@@ -151,14 +154,13 @@ const SelectPayment: React.FC<SelectPaymentProps> = ({ sale }) => {
 };
 
 const UnfinishedSales: React.FC = () => {
+  const [searchWord, setSearchWord] = useState('');
   const [pagination, setPagination] = useState<Pagination>({
-    data: [],
-    offset: 0,
-    numberPerPage: 20,
-    pageCount: 0,
-    currentData: [],
+    sales: [],
+    take: 0,
+    skip: 0,
+    size: 0,
   });
-  const [allSales, setAllSales] = useState<ISale[]>([]);
   const [isEmpty, setIsEmpty] = useState(false);
   const { addToast } = useToast();
 
@@ -172,15 +174,22 @@ const UnfinishedSales: React.FC = () => {
 
   useEffect(() => {
     api
-      .get('/sales/unfinished')
+      .get('/sales/unfinished', {
+        params: {
+          take: ELEMENTS_PER_PAGE,
+          skip: INITIAL_SKIP,
+        },
+      })
       .then((response) => {
         if (!response.data.length) {
           setIsEmpty(true);
         }
-        setPagination((prevState) => ({
-          ...prevState,
-          data: response.data,
-        }));
+        setPagination({
+          sales: response.data[0],
+          take: ELEMENTS_PER_PAGE,
+          skip: INITIAL_SKIP,
+          size: response.data[1],
+        });
       })
       .catch((err) => {
         addToast({
@@ -191,84 +200,93 @@ const UnfinishedSales: React.FC = () => {
       });
   }, [addToast]);
 
+  const updateSearch = (): void => {
+    if (searchWord) {
+      api
+        .get('/sales/unfinished', {
+          params: {
+            search: searchWord,
+            take: ELEMENTS_PER_PAGE,
+            skip: INITIAL_SKIP,
+          },
+        })
+        .then((response) => {
+          setPagination({
+            sales: response.data[0],
+            take: ELEMENTS_PER_PAGE,
+            skip: INITIAL_SKIP,
+            size: response.data[1],
+          });
+        });
+      return;
+    }
+
+    api
+      .get('/sales/unfinished', {
+        params: {
+          take: ELEMENTS_PER_PAGE,
+          skip: INITIAL_SKIP,
+        },
+      })
+      .then((response) => {
+        setPagination({
+          sales: response.data[0],
+          take: ELEMENTS_PER_PAGE,
+          skip: INITIAL_SKIP,
+          size: response.data[1],
+        });
+      });
+  };
+
+  const delayedSearch = useCallback(debounce(updateSearch, 500), [searchWord]);
+
   useEffect(() => {
-    setPagination((prevState) => ({
-      ...prevState,
-      pageCount: prevState.data.length / prevState.numberPerPage,
-      currentData: prevState.data.slice(
-        pagination.offset,
-        pagination.offset + pagination.numberPerPage,
-      ),
-    }));
-  }, [pagination.data, pagination.numberPerPage, pagination.offset]);
+    delayedSearch();
+
+    return delayedSearch.cancel;
+  }, [searchWord, delayedSearch]);
 
   const handlePageClick = useCallback(
-    (e) => {
+    async (e) => {
       const { selected } = e;
-      const offset = selected * pagination.numberPerPage;
-      setPagination({ ...pagination, offset });
-    },
-    [pagination],
-  );
-
-  const handleChangeInput = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      if (event.currentTarget.value) {
-        if (!allSales.length) {
-          setAllSales(pagination.data);
-          const filteredSales = pagination.data.filter((suggestion) => {
-            let searchName = suggestion.client_name.toUpperCase();
-            searchName = searchName.replace(/[ÀÁÂÃÄÅ]/, 'A');
-            searchName = searchName.replace(/[ÈÉÊË]/, 'E');
-            searchName = searchName.replace(/[ÚÙÛ]/, 'U');
-            searchName = searchName.replace(/[ÕÓÒÔ]/, 'O');
-            searchName = searchName.replace(/['Ç']/, 'C');
-            return searchName
-              .toLowerCase()
-              .includes(event.currentTarget.value.toLowerCase());
-          });
-
-          setPagination({
-            data: filteredSales,
-            offset: 0,
-            numberPerPage: 20,
-            pageCount: 0,
-            currentData: [],
-          });
-        } else {
-          const filteredSales = allSales.filter((suggestion) => {
-            let searchName = suggestion.client_name.toUpperCase();
-            searchName = searchName.replace(/[ÀÁÂÃÄÅ]/, 'A');
-            searchName = searchName.replace(/[ÈÉÊË]/, 'E');
-            searchName = searchName.replace(/[ÚÙÛ]/, 'U');
-            searchName = searchName.replace(/[ÕÓÒÔ]/, 'O');
-            searchName = searchName.replace(/['Ç']/, 'C');
-            return searchName
-              .toLowerCase()
-              .includes(event.currentTarget.value.toLowerCase());
-          });
-
-          setPagination({
-            data: filteredSales,
-            offset: 0,
-            numberPerPage: 20,
-            pageCount: 0,
-            currentData: [],
-          });
-        }
-      } else {
-        setPagination({
-          data: allSales,
-          offset: 0,
-          numberPerPage: 20,
-          pageCount: 0,
-          currentData: [],
+      const skip = selected * ELEMENTS_PER_PAGE;
+      if (searchWord) {
+        const response = await api.get('/sales/unfinished', {
+          params: {
+            search: searchWord,
+            take: ELEMENTS_PER_PAGE,
+            skip,
+          },
         });
-        setAllSales([]);
+        setPagination({
+          sales: response.data[0],
+          take: ELEMENTS_PER_PAGE,
+          skip,
+          size: response.data[1],
+        });
+        return;
       }
+      const response = await api.get('/sales/unfinished', {
+        params: {
+          take: ELEMENTS_PER_PAGE,
+          skip,
+        },
+      });
+      setPagination({
+        sales: response.data[0],
+        take: ELEMENTS_PER_PAGE,
+        skip,
+        size: response.data[1],
+      });
     },
-    [allSales, pagination.data],
+    [searchWord],
   );
+
+  const handleChangeInput = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ): void => {
+    setSearchWord(event.currentTarget.value);
+  };
 
   const handlePaymentClick = useCallback(
     (sale: ISale) => {
@@ -327,24 +345,33 @@ const UnfinishedSales: React.FC = () => {
 
           api
             .put('sales', data)
-            .then((response) => {
-              const updateSales = pagination.data.filter(
-                (s) => s.id !== response.data.id,
-              );
-              if (!updateSales.length) {
-                setIsEmpty(true);
-              }
-              setPagination({
-                data: updateSales,
-                offset: 0,
-                numberPerPage: 20,
-                pageCount: 0,
-                currentData: [],
-              });
-              addToast({
-                type: 'success',
-                title: 'Venda atualizada com sucesso',
-              });
+            .then((_) => {
+              api
+                .get('sales/unfinished', {
+                  params: {
+                    take: ELEMENTS_PER_PAGE,
+                    skip: INITIAL_SKIP,
+                  },
+                })
+                .then((response) => {
+                  setPagination({
+                    sales: response.data[0],
+                    take: ELEMENTS_PER_PAGE,
+                    skip: INITIAL_SKIP,
+                    size: response.data[1],
+                  });
+                  addToast({
+                    type: 'success',
+                    title: 'Venda atualizada com sucesso',
+                  });
+                })
+                .catch((err) => {
+                  addToast({
+                    title: 'Erro ao carregar categorias',
+                    description: err,
+                    type: 'error',
+                  });
+                });
             })
             .catch((err) => {
               addToast({
@@ -361,7 +388,7 @@ const UnfinishedSales: React.FC = () => {
         }
       });
     },
-    [addToast, pagination.data],
+    [addToast],
   );
 
   return (
@@ -370,6 +397,7 @@ const UnfinishedSales: React.FC = () => {
       <input
         type="text"
         onChange={handleChangeInput}
+        value={searchWord}
         placeholder="Nome do cliente"
       />
       {isEmpty ? (
@@ -380,7 +408,8 @@ const UnfinishedSales: React.FC = () => {
         </div>
       ) : (
         <div>
-          {pagination.currentData.map((p) => (
+          <span>Total de vendas em aberto: {pagination.size}</span>
+          {pagination.sales.map((p) => (
             <SaleCard key={p.id}>
               <span>Cliente: {p.client_name}</span>
               <span>Data da compra: {formatDate(p.created_at)}</span>
@@ -407,12 +436,12 @@ const UnfinishedSales: React.FC = () => {
           ))}
         </div>
       )}
-      {pagination.currentData.length && pagination.pageCount > 0.5 ? (
+      {pagination.size / pagination.take > 1 ? (
         <ReactPaginate
           previousLabel="<"
           nextLabel=">"
           breakLabel="..."
-          pageCount={pagination.pageCount}
+          pageCount={pagination.size / pagination.take}
           marginPagesDisplayed={2}
           pageRangeDisplayed={2}
           onPageChange={handlePageClick}

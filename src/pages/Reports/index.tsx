@@ -16,6 +16,10 @@ const Reports: React.FC = () => {
     history.push('/profit-orders');
   }, [history]);
 
+  const handleProductRemovalClick = useCallback(() => {
+    history.push('/products-removal');
+  }, [history]);
+
   return (
     <Container>
       <h3>Relatórios</h3>
@@ -26,7 +30,9 @@ const Reports: React.FC = () => {
       <button type="button" onClick={handleProfitOrdersClick}>
         Relatório de Pedidos
       </button>
-      <button type="button">Vendas em aberto</button>
+      <button type="button" onClick={handleProductRemovalClick}>
+        Produtos retirados
+      </button>
     </Container>
   );
 };

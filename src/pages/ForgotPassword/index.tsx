@@ -42,8 +42,6 @@ const ForgotPassword: React.FC = () => {
           abortEarly: false,
         });
 
-        // recuperacao de senha
-
         await api.post('/password/forgot', {
           email: data.email,
         });
