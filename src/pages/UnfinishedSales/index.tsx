@@ -52,7 +52,7 @@ interface Pagination {
   take: number;
 }
 
-const ELEMENTS_PER_PAGE = 1;
+const ELEMENTS_PER_PAGE = 15;
 const INITIAL_SKIP = 0;
 
 interface SelectPaymentProps {

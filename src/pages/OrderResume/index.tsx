@@ -30,7 +30,7 @@ const OrderResume: React.FC = () => {
   const history = useHistory();
 
   if (cart.length === 0 || paymentMethod === '') {
-    history.push('/');
+    history.push('/my-orders');
   }
 
   const cartTotal = useMemo(() => {
