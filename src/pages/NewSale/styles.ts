@@ -26,9 +26,24 @@ export const ProductCard = styled.div`
   font-size: 12px;
   padding-right: 2px;
 
+  div {
+    display: flex;
+    max-width: 150px;
+    min-width: 64px;
+    min-height: 32px;
+    text-align: center;
+    justify-content: center;
+    align-items: center;
+  }
+
   img {
     width: 80px;
     height: 80px;
+  }
+
+  button {
+    background: transparent;
+    border: 0;
   }
 `;
 

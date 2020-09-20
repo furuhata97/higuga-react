@@ -2,7 +2,7 @@
 import React, { useState, useCallback } from 'react';
 import BarcodeScannerComponent from 'react-webcam-barcode-scanner';
 import { Result } from '@zxing/library';
-import { FiPlus } from 'react-icons/fi';
+import { FiPlus, FiTrash } from 'react-icons/fi';
 import swal from 'sweetalert';
 
 import TextField from '@material-ui/core/TextField';
@@ -382,6 +382,14 @@ const NewSale: React.FC = () => {
     return 900 - 155;
   }, []);
 
+  const handleDeleteClick = useCallback(
+    (id: string) => {
+      const remainingProducts = products.filter((p) => p.product_id !== id);
+      setProducts(remainingProducts);
+    },
+    [products],
+  );
+
   return (
     <Container>
       <h3>Nova venda</h3>
@@ -401,6 +409,12 @@ const NewSale: React.FC = () => {
                 {product.quantity}
               </div>
               <div>{formatter.format(product.quantity * product.price)}</div>
+              <button
+                type="button"
+                onClick={() => handleDeleteClick(product.product_id)}
+              >
+                <FiTrash size={14} />
+              </button>
             </ProductCard>
           ))}
           <AddProduct type="button" onClick={handleAllowRead}>
