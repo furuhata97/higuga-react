@@ -49,12 +49,16 @@ const Profile: React.FC = () => {
     async (data: ProfileFormValidation) => {
       try {
         formRef.current?.setErrors({});
+        const real_phone = data.phone.replace(/_/g, '');
         const schema = Yup.object().shape({
           name: Yup.string().required('Nome obrigatório'),
           email: Yup.string()
             .required('Email obrigatório')
             .email('Digite um email válido'),
-          phone: Yup.string().required('Telefone obrigatório'),
+          phone: Yup.string()
+            .length(15, 'Telefone incompleto')
+            .oneOf([real_phone, undefined], 'Telefone inválido')
+            .required('Telefone obrigatório'),
         });
 
         await schema.validate(data, {
@@ -129,6 +133,7 @@ const Profile: React.FC = () => {
               name="name"
               type="text"
               placeholder="Nome completo"
+              mask=""
             />
 
             <Input
@@ -136,6 +141,7 @@ const Profile: React.FC = () => {
               name="phone"
               type="text"
               placeholder="Telefone"
+              mask="(99) 99999-9999"
             />
 
             <Input
@@ -143,6 +149,7 @@ const Profile: React.FC = () => {
               name="email"
               type="email"
               placeholder="Email"
+              mask=""
             />
             <ButtonContent>
               <SaveButton type="submit">Salvar</SaveButton>

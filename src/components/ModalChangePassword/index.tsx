@@ -114,6 +114,7 @@ const ModalChangePassword: React.FC<IModalProps> = ({
           name="old_password"
           placeholder="Digite sua senha atual"
           type="password"
+          mask=""
         />
 
         <Input
@@ -121,6 +122,7 @@ const ModalChangePassword: React.FC<IModalProps> = ({
           name="password"
           placeholder="Digite sua nova senha"
           type="password"
+          mask=""
         />
 
         <Input
@@ -128,6 +130,7 @@ const ModalChangePassword: React.FC<IModalProps> = ({
           name="password_confirmation"
           placeholder="Confirme sua nova senha"
           type="password"
+          mask=""
         />
         <ButtonContainer>
           <SaveButton type="submit">

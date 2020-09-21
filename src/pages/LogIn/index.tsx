@@ -88,6 +88,7 @@ const LogIn: React.FC = () => {
               name="email"
               type="email"
               placeholder="Email"
+              mask=""
             />
 
             <Input
@@ -95,6 +96,7 @@ const LogIn: React.FC = () => {
               name="password"
               type="password"
               placeholder="Senha"
+              mask=""
             />
             <ButtonContent>
               <Button type="submit">Entrar</Button>

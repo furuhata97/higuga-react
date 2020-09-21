@@ -89,6 +89,7 @@ const ResetPassword: React.FC = () => {
               name="password"
               placeholder="Nova senha"
               type="password"
+              mask=""
             />
 
             <Input
@@ -96,6 +97,7 @@ const ResetPassword: React.FC = () => {
               name="password_confirmation"
               placeholder="Confirmação da senha"
               type="password"
+              mask=""
             />
             <Button type="submit">Redefinir senha</Button>
           </Form>

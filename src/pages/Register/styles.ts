@@ -7,6 +7,32 @@ export const Container = styled.div`
   height: 100%;
   display: flex;
   align-items: stretch;
+  position: relative;
+`;
+
+export const LoadingDiv = styled.div`
+  display: flex;
+  flex-direction: column;
+  color: #333;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.7);
+
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(359deg);
+    }
+  }
+
+  svg {
+    animation: spin 2s linear infinite;
+  }
 `;
 
 export const Content = styled.div`
