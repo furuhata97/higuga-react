@@ -9,7 +9,7 @@ import ReactPaginate from 'react-paginate';
 import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
 import InputLabel from '@material-ui/core/InputLabel';
-import TextField from '@material-ui/core/TextField';
+import CurrencyInput from '../../components/InputCurrency';
 
 import { formatter } from '../../utils/moneyFormatter';
 
@@ -61,15 +61,15 @@ interface SelectPaymentProps {
 
 const SelectPayment: React.FC<SelectPaymentProps> = ({ sale }) => {
   const [componentPayment, setComponentPayment] = useState('');
-  const [componentMoney, setComponentMoney] = useState('0');
+  const [componentMoney, setComponentMoney] = useState('0,00');
 
   const handleChangeSelect = useCallback(
     (e) => {
       const { value } = e.target;
       setComponentPayment(value);
-      let updateMoney = componentMoney;
+      let updateMoney = componentMoney.replace(',', '.');
       if (value === 'CARTAO') {
-        setComponentMoney('0');
+        setComponentMoney('0,00');
         updateMoney = '0';
       }
       const props = JSON.stringify({
@@ -82,19 +82,15 @@ const SelectPayment: React.FC<SelectPaymentProps> = ({ sale }) => {
     [componentMoney],
   );
 
-  const handleChangeInputMoney = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      const { value } = event.currentTarget;
-      setComponentMoney(value);
-      const props = JSON.stringify({
-        payment: componentPayment,
-        money: value,
-      });
-      // @ts-ignore
-      swal.setActionValue({ confirm: props });
-    },
-    [componentPayment],
-  );
+  useEffect(() => {
+    const parsedMoney = componentMoney.replace(',', '.');
+    const props = JSON.stringify({
+      payment: componentPayment,
+      money: parsedMoney,
+    });
+    // @ts-ignore
+    swal.setActionValue({ confirm: props });
+  }, [componentPayment, componentMoney]);
 
   return (
     <div>
@@ -119,23 +115,21 @@ const SelectPayment: React.FC<SelectPaymentProps> = ({ sale }) => {
         </Select>
       </FormControl>
       <br />
-      <TextField
-        style={{ marginTop: '16px' }}
+      <CurrencyInput
         disabled={componentPayment !== 'DINHEIRO'}
-        id="money-received"
-        label="Dinheiro recebido"
-        type="text"
+        separator=","
+        name="Dinheiro recebido"
         value={componentMoney}
-        onChange={handleChangeInputMoney}
-        margin="dense"
-        variant="outlined"
-        required
+        setValue={setComponentMoney}
       />
       {componentPayment === 'DINHEIRO' &&
-      Number(componentMoney) > sale.total ? (
+      Number(componentMoney.replace(',', '.')) > sale.total ? (
         <>
           <div style={{ color: '#333' }}>
-            Troco: {formatter.format(Number(componentMoney) - sale.total)}
+            Troco:{' '}
+            {formatter.format(
+              Number(componentMoney.replace(',', '.')) - sale.total,
+            )}
           </div>
           <br />
         </>
@@ -315,7 +309,7 @@ const UnfinishedSales: React.FC = () => {
           const parsedValue = JSON.parse(componentValue);
 
           if (parsedValue.payment === 'DINHEIRO') {
-            if (parsedValue.money === 0) {
+            if (parsedValue.money === '0.00') {
               addToast({
                 type: 'error',
                 title: 'Quantidade inválida',
@@ -336,11 +330,11 @@ const UnfinishedSales: React.FC = () => {
               ? {
                   sale_id: sale.id,
                   payment_method: parsedValue.payment,
-                  money_received: parsedValue.money,
+                  money_received: Number(parsedValue.money),
                 }
               : {
                   sale_id: sale.id,
-                  payment_method: parsedValue.payment,
+                  payment_method: Number(parsedValue.payment),
                 };
 
           api
@@ -380,7 +374,8 @@ const UnfinishedSales: React.FC = () => {
                 description: `${err.message}`,
               });
             });
-        } else if (componentValue !== null) {
+        }
+        if (componentValue !== null) {
           addToast({
             type: 'error',
             title: 'Preencha os campos de pagamento',

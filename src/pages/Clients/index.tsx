@@ -31,6 +31,7 @@ interface IPagination {
 }
 
 const Clients: React.FC = () => {
+  const [loading, setLoading] = useState(false);
   const { user } = useAuth();
   const [pagination, setPagination] = useState<IPagination>({
     data: [],
@@ -73,6 +74,7 @@ const Clients: React.FC = () => {
         dangerMode: true,
       }).then((willChange) => {
         if (willChange) {
+          setLoading(true);
           api
             .patch('/users/admin', { user_id: id })
             .then((response) => {
@@ -87,11 +89,13 @@ const Clients: React.FC = () => {
               swal('Privilégio de administrador alterado com sucesso', {
                 icon: 'success',
               });
+              setLoading(false);
             })
             .catch((err) => {
               swal(`Erro ao alterar privilégio de administrador: ${err}`, {
                 icon: 'warning',
               });
+              setLoading(false);
             });
         }
       });
@@ -150,51 +154,64 @@ const Clients: React.FC = () => {
 
   return (
     <Container>
-      <h3>Clientes cadastrados</h3>
-      <CardHeader className="header">
-        <div>Nome</div>
-        <div>Email</div>
-        <div>Admin</div>
-        <div />
-      </CardHeader>
-      {!pagination.data.length ? <span>Nenhum cliente encontrado</span> : null}
-      {pagination.currentData.map((client) => {
-        if (client.id !== user?.id) {
-          return (
-            <ClientCard key={client.id}>
-              <div className="nameClass">{client.name.split(' ')[0]}</div>
-              <div>{client.email}</div>
-              <div>
-                <Checkbox
-                  checked={client.is_admin}
-                  onChange={() => handleCheckboxChange(client.id)}
-                  color="primary"
-                  inputProps={{ 'aria-label': 'primary checkbox' }}
-                />
-              </div>
-              <div>
-                <button type="button" onClick={() => handleDetailClick(client)}>
-                  Detalhes
-                </button>
-              </div>
-            </ClientCard>
-          );
-        }
-        return null;
-      })}
-      {pagination.currentData.length && pagination.data.length > 15 ? (
-        <ReactPaginate
-          previousLabel="<"
-          nextLabel=">"
-          breakLabel="..."
-          pageCount={pagination.pageCount}
-          marginPagesDisplayed={2}
-          pageRangeDisplayed={2}
-          onPageChange={handlePageClick}
-          containerClassName="pagination"
-          activeClassName="active"
-        />
-      ) : null}
+      {loading ? (
+        <div>
+          <strong>Atualizando...</strong>
+        </div>
+      ) : (
+        <>
+          <h3>Clientes cadastrados</h3>
+          <CardHeader className="header">
+            <div>Nome</div>
+            <div>Email</div>
+            <div>Admin</div>
+            <div />
+          </CardHeader>
+          {!pagination.data.length ? (
+            <span>Nenhum cliente encontrado</span>
+          ) : null}
+          {pagination.currentData.map((client) => {
+            if (client.id !== user?.id) {
+              return (
+                <ClientCard key={client.id}>
+                  <div className="nameClass">{client.name.split(' ')[0]}</div>
+                  <div>{client.email}</div>
+                  <div>
+                    <Checkbox
+                      checked={client.is_admin}
+                      onChange={() => handleCheckboxChange(client.id)}
+                      color="primary"
+                      inputProps={{ 'aria-label': 'primary checkbox' }}
+                    />
+                  </div>
+                  <div>
+                    <button
+                      type="button"
+                      onClick={() => handleDetailClick(client)}
+                    >
+                      Detalhes
+                    </button>
+                  </div>
+                </ClientCard>
+              );
+            }
+            return null;
+          })}
+          {pagination.currentData.length && pagination.data.length > 15 ? (
+            <ReactPaginate
+              previousLabel="<"
+              nextLabel=">"
+              breakLabel="..."
+              pageCount={pagination.pageCount}
+              marginPagesDisplayed={2}
+              pageRangeDisplayed={2}
+              onPageChange={handlePageClick}
+              containerClassName="pagination"
+              activeClassName="active"
+            />
+          ) : null}
+        </>
+      )}
     </Container>
   );
 };

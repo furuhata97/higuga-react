@@ -1,5 +1,5 @@
 /* eslint-disable no-restricted-globals */
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import BarcodeScannerComponent from 'react-webcam-barcode-scanner';
 import { Result } from '@zxing/library';
 import { FiPlus, FiTrash } from 'react-icons/fi';
@@ -25,6 +25,7 @@ import api from '../../services/api';
 import { useToast } from '../../hooks/toast';
 
 import { formatter } from '../../utils/moneyFormatter';
+import CurrencyInput from '../../components/InputCurrency';
 
 interface IProduct {
   name: string;
@@ -55,10 +56,10 @@ const NewSale: React.FC = () => {
   const [allowRead, setAllowRead] = useState(false);
   const [typeCode, setTypeCode] = useState(false);
   const [name, setName] = useState('');
-  const [discount, setDiscount] = useState('0');
+  const [discount, setDiscount] = useState('0,00');
   const [barcode, setBarcode] = useState('');
   const [selectedPayment, setSelectedPayment] = useState('');
-  const [money, setMoney] = useState('0');
+  const [money, setMoney] = useState('0,00');
   const [total, setTotal] = useState(0);
   const [subtotal, setSubtotal] = useState(0);
 
@@ -123,29 +124,14 @@ const NewSale: React.FC = () => {
     [],
   );
 
-  const handleChangeInputDiscount = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      if (event.currentTarget.value === '') {
-        setDiscount('0');
-        setSubtotal(total);
-      }
-      if (Number(event.currentTarget.value) < total) {
-        setDiscount(event.currentTarget.value);
-        setSubtotal(total - Number(event.currentTarget.value));
-      } else {
-        setDiscount('0');
-        setSubtotal(total);
-      }
-    },
-    [total],
-  );
-
-  const handleChangeInputMoney = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      setMoney(event.currentTarget.value);
-    },
-    [],
-  );
+  useEffect(() => {
+    if (discount === '0,00') {
+      setSubtotal(total);
+      return;
+    }
+    const parsedDiscount = Number(discount.replace(',', '.'));
+    setSubtotal(total - parsedDiscount);
+  }, [discount, total]);
 
   const handleChangeInputBarcode = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -235,7 +221,7 @@ const NewSale: React.FC = () => {
       return;
     }
 
-    if (selectedPayment === 'DINHEIRO' && money === '0') {
+    if (selectedPayment === 'DINHEIRO' && money === '0,00') {
       addToast({
         type: 'error',
         title: 'Erro',
@@ -244,11 +230,23 @@ const NewSale: React.FC = () => {
       return;
     }
 
-    if (selectedPayment === 'DINHEIRO' && Number(money) < subtotal) {
+    if (
+      selectedPayment === 'DINHEIRO' &&
+      Number(money.replace(',', '.')) < subtotal
+    ) {
       addToast({
         type: 'error',
         title: 'Erro',
         description: 'Dinheiro recebido menor que o total',
+      });
+      return;
+    }
+
+    if (subtotal < 0) {
+      addToast({
+        type: 'error',
+        title: 'Erro',
+        description: 'O desconto excedeu o total da compra',
       });
       return;
     }
@@ -267,12 +265,12 @@ const NewSale: React.FC = () => {
       products: productsForSale,
     };
 
-    if (discount !== '0') {
-      dataToSend.discount = Number(discount);
+    if (discount !== '0,00') {
+      dataToSend.discount = Number(discount.replace(',', '.'));
     }
 
     if (selectedPayment === 'DINHEIRO') {
-      dataToSend.money_received = Number(money);
+      dataToSend.money_received = Number(money.replace(',', '.'));
     }
 
     api
@@ -460,32 +458,28 @@ const NewSale: React.FC = () => {
             </Select>
           </FormControl>
           <br />
-          <TextField
-            id="discount"
-            label="Desconto"
-            type="text"
+          <CurrencyInput
+            separator=","
+            name="Desconto"
             value={discount}
-            onChange={handleChangeInputDiscount}
-            margin="dense"
-            variant="outlined"
-            required
+            setValue={setDiscount}
           />
           <br />
-          <TextField
+          <CurrencyInput
             disabled={selectedPayment !== 'DINHEIRO'}
-            id="money-received"
-            label="Dinheiro recebido"
-            type="text"
+            separator=","
+            name="Dinheiro recebido"
             value={money}
-            onChange={handleChangeInputMoney}
-            margin="dense"
-            variant="outlined"
-            required
+            setValue={setMoney}
           />
           <br />
-          {selectedPayment === 'DINHEIRO' && Number(money) > subtotal ? (
+          {selectedPayment === 'DINHEIRO' &&
+          Number(money.replace(',', '.')) > subtotal ? (
             <>
-              <div>Troco: {formatter.format(Number(money) - subtotal)}</div>
+              <div>
+                Troco:{' '}
+                {formatter.format(Number(money.replace(',', '.')) - subtotal)}
+              </div>
               <br />
             </>
           ) : null}

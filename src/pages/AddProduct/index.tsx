@@ -12,6 +12,7 @@ import InputLabel from '@material-ui/core/InputLabel';
 
 import { Formik, FormikProps, Form, FormikHelpers } from 'formik';
 import * as Yup from 'yup';
+import CurrencyInput from '../../components/InputCurrency';
 
 import { AddContainer, FormContainer, ImageInput } from './styles';
 
@@ -39,7 +40,6 @@ interface IProduct {
 
 interface IAddProductForm {
   name: string;
-  price: number;
   stock: number;
   barcode: string;
   category_id: string;
@@ -68,6 +68,7 @@ const AddProduct: React.FC<IAddProductProps> = ({
   setProducts,
 }) => {
   const { addToast } = useToast();
+  const [priceValue, setPriceValue] = useState('0,0');
   const [categories, setCategories] = useState<ICategory[]>([]);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [uploadedFile, setUploadedFile] = useState(noPic);
@@ -111,8 +112,9 @@ const AddProduct: React.FC<IAddProductProps> = ({
     ) => {
       setIsSubmitting(true);
       try {
+        const parsedPrice = priceValue.replace(',', '.');
         fileFormData.append('name', data.name);
-        fileFormData.append('price', String(data.price));
+        fileFormData.append('price', parsedPrice);
         fileFormData.append('category_id', selectedCategory);
         fileFormData.append('barcode', data.barcode);
         fileFormData.append('stock', String(data.stock));
@@ -135,7 +137,7 @@ const AddProduct: React.FC<IAddProductProps> = ({
         resetForm({});
         addToast({
           type: 'success',
-          title: 'Produto atualizado',
+          title: 'Produto cadastrado',
         });
         setIsSubmitting(false);
         setActionType('');
@@ -150,12 +152,19 @@ const AddProduct: React.FC<IAddProductProps> = ({
         setFileFormData(f);
         addToast({
           type: 'error',
-          title: 'Ocorreu um erro ao adicionar o produto',
+          title: 'Ocorreu um erro ao cadastrar o produto',
           description: `${err.message}`,
         });
       }
     },
-    [addToast, selectedCategory, fileFormData, setActionType, setProducts],
+    [
+      addToast,
+      selectedCategory,
+      fileFormData,
+      setActionType,
+      setProducts,
+      priceValue,
+    ],
   );
 
   return (
@@ -167,12 +176,18 @@ const AddProduct: React.FC<IAddProductProps> = ({
           initialValues={{
             image: noPic,
             name: '',
-            price: 0,
             category_id: '',
             barcode: '',
             stock: 0,
           }}
           onSubmit={(values: IAddProductForm, actions) => {
+            if (selectedCategory === '') {
+              addToast({
+                type: 'error',
+                title: 'É necessário selecionar uma categoria',
+              });
+              return;
+            }
             if (uploadedFile !== noPic) {
               addProduct(values, actions);
             } else {
@@ -187,7 +202,6 @@ const AddProduct: React.FC<IAddProductProps> = ({
             barcode: Yup.string().required(
               'É necessário digitar um código de barras',
             ),
-            price: Yup.number().required('É necessário digitar um preço'),
             stock: Yup.number().required(
               'É necessário digitar a quantidade em estoque',
             ),
@@ -241,19 +255,13 @@ const AddProduct: React.FC<IAddProductProps> = ({
                       fullWidth
                       required
                     />
-                    <TextField
-                      id="price"
-                      label="Preço"
-                      value={values.price}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                      helperText={touched.price ? errors.price : ''}
-                      error={touched.price && Boolean(errors.price)}
-                      margin="dense"
-                      variant="outlined"
-                      fullWidth
-                      required
+
+                    <CurrencyInput
+                      separator=","
+                      setValue={setPriceValue}
+                      name="Preço"
                     />
+
                     <TextField
                       id="stock"
                       label="Estoque"

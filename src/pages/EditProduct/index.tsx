@@ -12,6 +12,7 @@ import InputLabel from '@material-ui/core/InputLabel';
 
 import { Formik, FormikProps, Form, FormikHelpers } from 'formik';
 import * as Yup from 'yup';
+import CurrencyInput from '../../components/InputCurrency';
 
 import { EditContainer, FormContainer, ImageInput } from './styles';
 
@@ -37,7 +38,6 @@ interface IProduct {
 
 interface IEditProductForm {
   name: string;
-  price: number;
   stock: number;
   barcode: string;
   category_id: string;
@@ -68,6 +68,9 @@ const EditProduct: React.FC<IEditProductProps> = ({
   setProducts,
 }) => {
   const { addToast } = useToast();
+  const [priceValue, setPriceValue] = useState(
+    String(product.price).replace('.', ','),
+  );
   const [categories, setCategories] = useState<ICategory[]>([]);
   const [selectedCategory, setSelectedCategory] = useState(product.category_id);
   const [uploadedFile, setUploadedFile] = useState(product.image_url);
@@ -118,9 +121,10 @@ const EditProduct: React.FC<IEditProductProps> = ({
     ) => {
       setIsSubmitting(true);
       try {
+        const parsedPrice = priceValue.replace(',', '.');
         fileFormData.append('id', product.id);
         fileFormData.append('name', data.name);
-        fileFormData.append('price', String(data.price));
+        fileFormData.append('price', parsedPrice);
         fileFormData.append('category_id', selectedCategory);
         fileFormData.append('barcode', data.barcode);
         fileFormData.append('stock', String(data.stock));
@@ -170,6 +174,7 @@ const EditProduct: React.FC<IEditProductProps> = ({
       product.id,
       setActionType,
       setProducts,
+      priceValue,
     ],
   );
 
@@ -182,7 +187,6 @@ const EditProduct: React.FC<IEditProductProps> = ({
           initialValues={{
             image_url: product.image_url,
             name: product.name,
-            price: product.price,
             category_id: product.category_id,
             barcode: product.barcode,
             stock: product.stock,
@@ -195,7 +199,6 @@ const EditProduct: React.FC<IEditProductProps> = ({
             barcode: Yup.string().required(
               'É necessário digitar um código de barras',
             ),
-            price: Yup.number().required('É necessário digitar um preço'),
             stock: Yup.number().required(
               'É necessário digitar a quantidade do estoque',
             ),
@@ -246,18 +249,11 @@ const EditProduct: React.FC<IEditProductProps> = ({
                       fullWidth
                       required
                     />
-                    <TextField
-                      id="price"
-                      label="Preço"
-                      value={values.price}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                      helperText={touched.price ? errors.price : ''}
-                      error={touched.price && Boolean(errors.price)}
-                      margin="dense"
-                      variant="outlined"
-                      fullWidth
-                      required
+                    <CurrencyInput
+                      separator=","
+                      setValue={setPriceValue}
+                      value={priceValue}
+                      name="Preço"
                     />
                     <TextField
                       id="stock"
