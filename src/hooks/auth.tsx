@@ -1,6 +1,4 @@
 import React, { createContext, useState, useCallback, useContext } from 'react';
-import { decode } from 'jsonwebtoken';
-import { isBefore, fromUnixTime } from 'date-fns';
 import api from '../services/api';
 
 interface Address {
