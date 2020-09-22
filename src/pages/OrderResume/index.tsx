@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import { useHistory, Link } from 'react-router-dom';
 
 import { useAuth } from '../../hooks/auth';
@@ -29,9 +29,11 @@ const OrderResume: React.FC = () => {
 
   const history = useHistory();
 
-  if (cart.length === 0 || paymentMethod === '') {
-    history.push('/my-orders');
-  }
+  useEffect(() => {
+    if (cart.length === 0 || paymentMethod === '' || !address) {
+      history.push('/my-orders');
+    }
+  }, [paymentMethod, cart, history, address]);
 
   const cartTotal = useMemo(() => {
     const { amount } = cart.reduce(
@@ -116,9 +118,9 @@ const OrderResume: React.FC = () => {
             </div>
             <Address>
               <h4>Endereço de entrega:</h4>
-              <p>{address?.address}</p>
+              <p>{address.address}</p>
               <p>
-                {address?.city} - {address?.zip_code}
+                {address.city} - {address.zip_code}
               </p>
               <Link to="/select-address">Alterar endereço</Link>
               <h4>Forma de pagamento:</h4>

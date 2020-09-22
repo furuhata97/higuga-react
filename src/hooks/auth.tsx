@@ -39,6 +39,7 @@ interface ITokenPayload {
 interface AuthContextState {
   address: Address;
   user: User | null;
+  token: string | undefined;
   chooseAddress(add: Address): void;
   signIn(credentials: SignInCredentials): Promise<void>;
   signOut(): void;
@@ -53,14 +54,13 @@ export const AuthProvider: React.FC = ({ children }) => {
     const user = localStorage.getItem('@Higuga:user');
 
     if (token && user) {
-      const decoded = decode(token, { complete: true });
-      const dateNow = new Date();
-      const { payload } = decoded as ITokenPayload;
-      if (isBefore(fromUnixTime(payload.exp), dateNow)) return {} as AuthState;
       api.defaults.headers.authorization = `Bearer ${token}`;
       return { token, user: JSON.parse(user) };
     }
 
+    localStorage.removeItem('@Higuga:token');
+    localStorage.removeItem('@Higuga:user');
+    localStorage.removeItem('@Higuga:address');
     return {} as AuthState;
   });
 
@@ -75,7 +75,7 @@ export const AuthProvider: React.FC = ({ children }) => {
 
   const chooseAddress = useCallback((chosenAddress: Address) => {
     setAddress(chosenAddress);
-    localStorage.setItem('Higuga:address', JSON.stringify(chosenAddress));
+    localStorage.setItem('@Higuga:address', JSON.stringify(chosenAddress));
   }, []);
 
   const signIn = useCallback(async ({ email, password }) => {
@@ -94,6 +94,7 @@ export const AuthProvider: React.FC = ({ children }) => {
     api.defaults.headers.authorization = `Bearer ${token}`;
 
     setData({ token, user });
+    setAddress(userAddress);
   }, []);
 
   const signOut = useCallback(() => {
@@ -125,6 +126,7 @@ export const AuthProvider: React.FC = ({ children }) => {
     <AuthContext.Provider
       value={{
         user: data.user,
+        token: data.token,
         address,
         chooseAddress,
         signIn,

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   RouteProps as ReactRouteProps,
   Route as ReactRoute,
@@ -6,6 +6,7 @@ import {
 } from 'react-router-dom';
 
 import { useAuth } from '../hooks/auth';
+import api from '../services/api';
 
 interface RouteProps extends ReactRouteProps {
   isPrivate?: boolean;
@@ -19,7 +20,31 @@ const Route: React.FC<RouteProps> = ({
   component: Component,
   ...rest
 }) => {
-  const { user } = useAuth();
+  const { user, token, signOut } = useAuth();
+
+  useEffect(() => {
+    const checkToken = async (): Promise<void> => {
+      if (token && user) {
+        api.defaults.headers.authorization = `Bearer ${token}`;
+        try {
+          const response = await api.get('/sessions/check-token');
+          if (response.data.is_admin !== user.is_admin) {
+            api.defaults.headers.authorization = '';
+
+            signOut();
+            return;
+          }
+        } catch (error) {
+          api.defaults.headers.authorization = '';
+
+          signOut();
+        }
+      }
+    };
+
+    checkToken();
+  }, [signOut, token, user]);
+
   if (user && isAdmin) {
     // console.log('Estou logado e preciso ser admin');
     if (!user.is_admin) {
@@ -94,51 +119,6 @@ const Route: React.FC<RouteProps> = ({
       )}
     />
   );
-
-  // if (isPrivate === false && !!user === false) {
-  //   return <ReactRoute {...rest} render={() => <Component />} />;
-  // }
-  // if (isPrivate === true && !!user === true) {
-  //   if (isAdmin === true && user?.is_admin === true) {
-  //     return <ReactRoute {...rest} render={() => <Component />} />;
-  //   }
-  //   return (
-  //     <ReactRoute
-  //       {...rest}
-  //       render={({ location }) => (
-  //         <Redirect to={{ pathname: 'dashboard', state: { from: location } }} />
-  //       )}
-  //     />
-  //   );
-  // }
-  // if (isPrivate === false && !!user === true) {
-  //   return (
-  //     <ReactRoute
-  //       {...rest}
-  //       render={({ location }) => (
-  //         <Redirect
-  //           to={{
-  //             pathname: 'dashboard',
-  //             state: { from: location },
-  //           }}
-  //         />
-  //       )}
-  //     />
-  //   );
-  // }
-  // return (
-  //   <ReactRoute
-  //     {...rest}
-  //     render={({ location }) => (
-  //       <Redirect
-  //         to={{
-  //           pathname: '/',
-  //           state: { from: location },
-  //         }}
-  //       />
-  //     )}
-  //   />
-  // );
 };
 
 export default Route;
