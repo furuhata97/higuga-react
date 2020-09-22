@@ -11,6 +11,7 @@ import { useHistory, useParams } from 'react-router-dom';
 import Header from '../../components/GenericHeader';
 
 import api from '../../services/api';
+import cep from '../../services/cep';
 
 import { Container, FormContainer } from './styles';
 import { useAuth } from '../../hooks/auth';
@@ -39,6 +40,9 @@ const EditAddress: React.FC = () => {
   const [editAddress, setEditAddress] = useState<Address>({} as Address);
   const { user, updateUser } = useAuth();
   const { addToast } = useToast();
+  const [backScape, setBackspace] = useState(false);
+  const [deleteKey, setDeleteKey] = useState(false);
+  const [allowSearchCep, setAllowSearchCep] = useState(true);
 
   useEffect(() => {
     if (!user) {
@@ -96,6 +100,120 @@ const EditAddress: React.FC = () => {
     [editAddress, history, addToast, updateUser, user],
   );
 
+  const handleChangeCep = useCallback(
+    (
+      event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+      setFieldValue: (
+        field: string,
+        value: any,
+        shouldValidate?: boolean | undefined,
+      ) => void,
+    ) => {
+      if (!deleteKey) {
+        const { value } = event.currentTarget;
+        let regexp = /[^\w\W]/;
+        switch (value.length) {
+          case 1:
+            regexp = /^\d{1}$/;
+            break;
+          case 2:
+            regexp = /^\d{2}$/;
+            break;
+          case 3:
+            regexp = /^\d{3}$/;
+            break;
+          case 4:
+            regexp = /^\d{4}$/;
+            break;
+          case 5:
+            regexp = /^\d{5}$/;
+            break;
+          case 6:
+            regexp = /^\d{5}-$/;
+            break;
+          case 7:
+            regexp = /^\d{5}-\d{1}$/;
+            break;
+          case 8:
+            regexp = /^\d{5}-\d{2}$/;
+            break;
+          case 9:
+            regexp = /^\d{5}-\d{3}$/;
+            break;
+          default:
+            regexp = /[^\w\W]/;
+            break;
+        }
+
+        const result = value.match(regexp);
+        if (value.length === 0) {
+          setFieldValue('zip_code', value);
+          setAllowSearchCep(true);
+          return;
+        }
+        if (value.length === 5 && result) {
+          if (backScape) {
+            setFieldValue('zip_code', value.substring(0, 4));
+            setAllowSearchCep(true);
+            return;
+          }
+
+          setFieldValue('zip_code', `${value}-`);
+          setAllowSearchCep(true);
+          return;
+        }
+        if (value.length === 6 && result) {
+          if (backScape) {
+            setFieldValue('zip_code', value.substring(0, 4));
+            setAllowSearchCep(true);
+          }
+          return;
+        }
+        if (value.length <= 9 && result) {
+          setFieldValue('zip_code', value);
+          setAllowSearchCep(true);
+        }
+        if (value.length === 9 && allowSearchCep) {
+          const pureNumbers = value.replace('-', '');
+          cep
+            .get(`${pureNumbers}/json/`)
+            .then((response) => {
+              if (!response.data?.erro) {
+                setFieldValue('city', response.data.localidade);
+                setFieldValue('address', response.data.logradouro);
+              }
+            })
+            .catch((error) => {
+              addToast({
+                type: 'error',
+                title: 'Erro ao carregar informações do CEP',
+              });
+            });
+
+          setFieldValue('zip_code', value);
+          setAllowSearchCep(false);
+        }
+      }
+    },
+    [backScape, deleteKey, allowSearchCep, addToast],
+  );
+
+  const handleKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLInputElement>) => {
+      if (event.keyCode === 8) {
+        setBackspace(true);
+      } else {
+        setBackspace(false);
+      }
+      if (event.keyCode === 46) {
+        setDeleteKey(true);
+      } else {
+        setDeleteKey(false);
+      }
+    },
+    [],
+  );
+
   return (
     <>
       <Container>
@@ -128,6 +246,7 @@ const EditAddress: React.FC = () => {
                 handleBlur,
                 handleChange,
                 isSubmitting,
+                setFieldValue,
               } = props;
 
               return (
@@ -138,7 +257,11 @@ const EditAddress: React.FC = () => {
                         id="zip_code"
                         label="CEP"
                         value={values.zip_code}
-                        onChange={handleChange}
+                        onChange={
+                          (event) => handleChangeCep(event, setFieldValue)
+                          // eslint-disable-next-line react/jsx-curly-newline
+                        }
+                        onKeyDown={handleKeyDown}
                         onBlur={handleBlur}
                         helperText={touched.zip_code ? errors.zip_code : ''}
                         error={touched.zip_code && Boolean(errors.zip_code)}
