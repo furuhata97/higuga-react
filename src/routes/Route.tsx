@@ -1,3 +1,5 @@
+/* eslint-disable no-underscore-dangle */
+
 import React, { useEffect } from 'react';
 import {
   RouteProps as ReactRouteProps,
@@ -20,30 +22,68 @@ const Route: React.FC<RouteProps> = ({
   component: Component,
   ...rest
 }) => {
-  const { user, token, signOut } = useAuth();
+  const { user, signOut, updateUser } = useAuth();
+
+  api.interceptors.response.use(
+    (response) => {
+      return response;
+    },
+    async (err) => {
+      if (!user) {
+        return Promise.reject(err);
+      }
+
+      const { id } = user;
+
+      const originalReq = err.config;
+
+      if (!err.response?.status) {
+        Promise.reject(err);
+      }
+
+      if (err.response.status === 401) {
+        return new Promise((resolve, reject) => {
+          async function refreshToken(): Promise<void> {
+            try {
+              const response = await api.post(
+                `${process.env.REACT_APP_API_URL}/sessions/token`,
+                { id },
+              );
+              updateUser(response.data.user);
+              originalReq._retry = true;
+              resolve(api(originalReq));
+            } catch (error) {
+              signOut();
+              reject(error);
+            }
+          }
+
+          refreshToken();
+        });
+      }
+
+      return Promise.reject(err);
+    },
+  );
 
   useEffect(() => {
     const checkToken = async (): Promise<void> => {
-      if (token && user) {
-        api.defaults.headers.authorization = `Bearer ${token}`;
-        try {
-          const response = await api.get('/sessions/check-token');
-          if (response.data.is_admin !== user.is_admin) {
-            api.defaults.headers.authorization = '';
+      if (user) {
+        const csrf_token = await api.get('sessions/csrf-token');
 
-            signOut();
-            return;
-          }
-        } catch (error) {
-          api.defaults.headers.authorization = '';
-
+        api.defaults.headers['X-CSRF-Token'] = csrf_token.data.csrfToken;
+        const response = await api.get('/sessions/check-token');
+        if (!response) {
+          signOut();
+        }
+        if (response.data.is_admin !== user.is_admin) {
           signOut();
         }
       }
     };
 
     checkToken();
-  }, [signOut, token, user]);
+  }, [signOut, user]);
 
   if (user && isAdmin) {
     // console.log('Estou logado e preciso ser admin');

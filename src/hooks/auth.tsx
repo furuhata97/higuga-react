@@ -19,7 +19,6 @@ interface User {
 }
 
 interface AuthState {
-  token: string;
   user: User;
 }
 
@@ -28,16 +27,9 @@ interface SignInCredentials {
   password: string;
 }
 
-interface ITokenPayload {
-  payload: {
-    exp: number;
-  };
-}
-
 interface AuthContextState {
   address: Address;
   user: User | null;
-  token: string | undefined;
   chooseAddress(add: Address): void;
   signIn(credentials: SignInCredentials): Promise<void>;
   signOut(): void;
@@ -48,17 +40,12 @@ const AuthContext = createContext<AuthContextState>({} as AuthContextState);
 
 export const AuthProvider: React.FC = ({ children }) => {
   const [data, setData] = useState<AuthState>(() => {
-    const token = localStorage.getItem('@Higuga:token');
     const user = localStorage.getItem('@Higuga:user');
 
-    if (token && user) {
-      api.defaults.headers.authorization = `Bearer ${token}`;
-      return { token, user: JSON.parse(user) };
+    if (user) {
+      return { user: JSON.parse(user) };
     }
 
-    localStorage.removeItem('@Higuga:token');
-    localStorage.removeItem('@Higuga:user');
-    localStorage.removeItem('@Higuga:address');
     return {} as AuthState;
   });
 
@@ -77,54 +64,48 @@ export const AuthProvider: React.FC = ({ children }) => {
   }, []);
 
   const signIn = useCallback(async ({ email, password }) => {
+    const csrf_token = await api.get('sessions/csrf-token');
+
+    api.defaults.headers['X-CSRF-Token'] = csrf_token.data.csrfToken;
+
     const response = await api.post('sessions', {
       email,
       password,
     });
 
-    const { token, user } = response.data;
+    const { user } = response.data;
 
-    localStorage.setItem('@Higuga:token', token);
     localStorage.setItem('@Higuga:user', JSON.stringify(user));
     const userAddress = user.addresses.find((add: Address) => add.is_main);
     localStorage.setItem('@Higuga:address', JSON.stringify(userAddress));
 
-    api.defaults.headers.authorization = `Bearer ${token}`;
-
-    setData({ token, user });
+    setData({ user });
     setAddress(userAddress);
   }, []);
 
-  const signOut = useCallback(() => {
-    localStorage.removeItem('@Higuga:token');
-    localStorage.removeItem('@Higuga:user');
-    localStorage.removeItem('@Higuga:address');
-
-    // localStorage.removeItem('@Higuga:cartProducts');
-    // localStorage.removeItem('@Higuga:cartQuantity');
-    // localStorage.removeItem('@Higuga:paymentMethod');
+  const signOut = useCallback(async () => {
+    try {
+      await api.delete('/sessions/logout');
+      localStorage.removeItem('@Higuga:user');
+      localStorage.removeItem('@Higuga:address');
+    } catch (error) {
+      throw new Error('Erro ao realizar logout');
+    }
 
     setData({} as AuthState);
   }, []);
 
-  const updateUser = useCallback(
-    (user: User) => {
-      localStorage.setItem('@Higuga:user', JSON.stringify(user));
-      const { token } = data;
-      setData({
-        token,
-        user,
-      });
-      api.defaults.headers.authorization = `Bearer ${token}`;
-    },
-    [data],
-  );
+  const updateUser = useCallback((user: User) => {
+    localStorage.setItem('@Higuga:user', JSON.stringify(user));
+    setData({
+      user,
+    });
+  }, []);
 
   return (
     <AuthContext.Provider
       value={{
         user: data.user,
-        token: data.token,
         address,
         chooseAddress,
         signIn,
